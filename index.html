@@ -1,39 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>The Dream Library</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  <link rel="stylesheet" href="style.css">
 
+  <style>
     body {
-      font-family: Arial, sans-serif;
       background: #07111f;
       color: white;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #1d3552;
+    }
+
+    header h1 {
+      font-size: 25px;
+      margin-bottom: 10px;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      color: #b9c9dc;
+      margin: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    nav button:hover {
+      color: white;
+    }
+
+    .page {
+      display: none;
+      max-width: 750px;
+      margin: auto;
+      padding: 50px 20px;
+    }
+
+    .page.active {
+      display: block;
     }
 
     .hero {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       text-align: center;
-      padding: 30px 20px;
-      background:
-        radial-gradient(circle at top, #183b68 0%, #07111f 55%);
-    }
-
-    .container {
-      max-width: 700px;
+      padding-top: 80px;
     }
 
     .moon {
@@ -41,17 +60,16 @@
       margin-bottom: 20px;
     }
 
-    h1 {
-      font-size: 42px;
-      letter-spacing: 2px;
+    h2 {
+      font-size: 38px;
       margin-bottom: 15px;
     }
 
     .tagline {
-      font-size: 20px;
       color: #b9c9dc;
+      font-size: 19px;
       line-height: 1.6;
-      margin-bottom: 35px;
+      margin-bottom: 30px;
     }
 
     .intro {
@@ -60,103 +78,455 @@
       margin-bottom: 35px;
     }
 
-    .buttons {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      border: none;
-      padding: 15px 25px;
-      border-radius: 30px;
-      font-size: 16px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .primary {
-      background: #ffffff;
+    .main-button {
+      background: white;
       color: #07111f;
+      border: none;
+      border-radius: 30px;
+      padding: 15px 25px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 5px;
     }
 
-    .secondary {
+    .outline-button {
       background: transparent;
       color: white;
       border: 1px solid #7186a0;
+      border-radius: 30px;
+      padding: 15px 25px;
+      cursor: pointer;
+      margin: 5px;
     }
 
-    .quote {
-      margin-top: 55px;
-      font-style: italic;
-      color: #91a6bd;
+    .card {
+      background: #0c1b2d;
+      border: 1px solid #1d3552;
+      border-radius: 18px;
+      padding: 25px;
+      margin-top: 25px;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #304a67;
+      background: #07111f;
+      color: white;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+    }
+
+    .choice-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .choice {
+      border: 1px solid #304a67;
+      padding: 10px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      color: #b9c9dc;
+    }
+
+    .choice.selected {
+      background: white;
+      color: #07111f;
+    }
+
+    .privacy {
+      margin-top: 25px;
+      padding: 15px;
+      background: #101f32;
+      border-radius: 12px;
+      line-height: 1.5;
+      color: #b9c9dc;
+    }
+
+    .save-button {
+      width: 100%;
+      margin-top: 25px;
+      padding: 16px;
+      border: none;
+      border-radius: 30px;
+      background: white;
+      color: #07111f;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .dream-item {
+      padding: 20px;
+      border-bottom: 1px solid #1d3552;
+    }
+
+    .dream-item h3 {
+      margin-bottom: 8px;
+    }
+
+    .dream-item p {
+      color: #b9c9dc;
+      line-height: 1.6;
     }
 
     footer {
-      margin-top: 40px;
-      font-size: 13px;
+      text-align: center;
+      padding: 40px 20px;
       color: #647991;
+      font-size: 13px;
     }
   </style>
 </head>
 
 <body>
 
-  <section class="hero">
+<header>
 
-    <div class="container">
+  <h1>🌙 THE DREAM LIBRARY</h1>
 
-      <div class="moon">🌙</div>
+  <nav>
+    <button onclick="showPage('home')">Home</button>
+    <button onclick="showPage('recorder')">Record a Dream</button>
+    <button onclick="showPage('library')">Explore Dreams</button>
+  </nav>
 
-      <h1>THE DREAM LIBRARY</h1>
+</header>
 
-      <p class="tagline">
-        Where humanity's dreams are remembered.
-      </p>
 
-      <p class="intro">
-        Every night, millions of people dream.
-        Some dreams are forgotten within minutes.
-        Others stay with us for a lifetime.
-        <br><br>
-        The Dream Library is a place to record,
-        preserve and explore the dreams of humanity.
-      </p>
+<!-- HOME -->
 
-      <div class="buttons">
+<section id="home" class="page active">
 
-        <button class="primary" onclick="recordDream()">
-          ✍️ Record My Dream
-        </button>
+  <div class="hero">
 
-        <button class="secondary" onclick="exploreDreams()">
-          📖 Explore Dreams
-        </button>
+    <div class="moon">🌙</div>
 
+    <h2>THE DREAM LIBRARY</h2>
+
+    <p class="tagline">
+      Where humanity's dreams are remembered.
+    </p>
+
+    <p class="intro">
+      Every night, millions of people dream.
+      Some dreams disappear within minutes.
+      Others stay with us for a lifetime.
+      <br><br>
+      The Dream Library is a place to record,
+      preserve and eventually explore the dreams
+      of people from around the world.
+    </p>
+
+    <button class="main-button"
+            onclick="showPage('recorder')">
+      ✍️ Record My Dream
+    </button>
+
+    <button class="outline-button"
+            onclick="showPage('library')">
+      📖 Explore Dreams
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- DREAM RECORDER -->
+
+<section id="recorder" class="page">
+
+  <h2>Record Your Dream</h2>
+
+  <p class="tagline">
+    Your dream deserves to be remembered.
+  </p>
+
+  <div class="card">
+
+    <label for="pseudonym">
+      Your Pseudonym
+    </label>
+
+    <input
+      type="text"
+      id="pseudonym"
+      placeholder="Example: MoonWalker"
+    >
+
+
+    <label for="dreamTitle">
+      Dream Title
+    </label>
+
+    <input
+      type="text"
+      id="dreamTitle"
+      placeholder="Give your dream a title"
+    >
+
+
+    <label for="dreamText">
+      Tell Us Your Dream
+    </label>
+
+    <textarea
+      id="dreamText"
+      placeholder="Write everything you remember..."
+    ></textarea>
+
+
+    <label>
+      How did the dream make you feel?
+    </label>
+
+    <div class="choice-group">
+
+      <div class="choice"
+           onclick="selectChoice(this)">
+        😊 Happy
       </div>
 
-      <p class="quote">
-        "Every dream deserves a place to be remembered."
-      </p>
+      <div class="choice"
+           onclick="selectChoice(this)">
+        😨 Afraid
+      </div>
 
-      <footer>
-        The Dream Library · A growing archive of human dreams
-      </footer>
+      <div class="choice"
+           onclick="selectChoice(this)">
+        😌 Peaceful
+      </div>
+
+      <div class="choice"
+           onclick="selectChoice(this)">
+        😢 Sad
+      </div>
+
+      <div class="choice"
+           onclick="selectChoice(this)">
+        😮 Amazed
+      </div>
+
+      <div class="choice"
+           onclick="selectChoice(this)">
+        😕 Confused
+      </div>
 
     </div>
 
-  </section>
 
-  <script>
-    function recordDream() {
-      alert("The Dream Recorder is coming next. 🌙");
+    <label for="category">
+      Dream Category
+    </label>
+
+    <select id="category">
+
+      <option value="">
+        Select a category
+      </option>
+
+      <option>
+        Adventure
+      </option>
+
+      <option>
+        Family
+      </option>
+
+      <option>
+        Love
+      </option>
+
+      <option>
+        Fear
+      </option>
+
+      <option>
+        Spiritual
+      </option>
+
+      <option>
+        Nature
+      </option>
+
+      <option>
+        Animals
+      </option>
+
+      <option>
+        Other
+      </option>
+
+    </select>
+
+
+    <div class="privacy">
+
+      <strong>🔒 Privacy first</strong>
+
+      <br><br>
+
+      This first version does not permanently
+      store your dream online.
+
+      <br><br>
+
+      Before we launch publicly, we will build
+      secure storage and give you clear control
+      over whether your dream remains private
+      or is shared anonymously.
+
+    </div>
+
+
+    <button
+      class="save-button"
+      onclick="saveDream()">
+
+      💾 Save Dream
+
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- DREAM LIBRARY -->
+
+<section id="library" class="page">
+
+  <h2>Explore Dreams</h2>
+
+  <p class="tagline">
+    A future collection of dreams from humanity.
+  </p>
+
+  <div class="card">
+
+    <div class="dream-item">
+
+      <h3>🌊 The Ocean</h3>
+
+      <p>
+        A dream recorded by
+        <strong>OceanWalker</strong>.
+      </p>
+
+      <p>
+        The full worldwide Dream Library
+        will appear here once dream sharing
+        is connected to our secure database.
+      </p>
+
+    </div>
+
+
+    <div class="dream-item">
+
+      <h3>🕊️ Flying</h3>
+
+      <p>
+        Dreams about freedom, movement
+        and discovering unknown places.
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<footer>
+
+  The Dream Library © 2026
+  <br><br>
+  Every dream deserves a place to be remembered.
+
+</footer>
+
+
+<script src="app.js"></script>
+
+<script>
+
+  function showPage(pageId) {
+
+    const pages =
+      document.querySelectorAll('.page');
+
+    pages.forEach(function(page) {
+      page.classList.remove('active');
+    });
+
+    document
+      .getElementById(pageId)
+      .classList.add('active');
+
+    window.scrollTo(0, 0);
+  }
+
+
+  function selectChoice(element) {
+
+    const choices =
+      document.querySelectorAll('.choice');
+
+    choices.forEach(function(choice) {
+      choice.classList.remove('selected');
+    });
+
+    element.classList.add('selected');
+  }
+
+
+  function saveDream() {
+
+    const pseudonym =
+      document.getElementById('pseudonym').value;
+
+    const title =
+      document.getElementById('dreamTitle').value;
+
+    const dream =
+      document.getElementById('dreamText').value;
+
+    if (!pseudonym ||
+        !title ||
+        !dream) {
+
+      alert(
+        "Please complete your pseudonym, dream title and dream."
+      );
+
+      return;
     }
 
-    function exploreDreams() {
-      alert("The Dream Library is coming next. 📖");
-    }
-  </script>
-<script src="app.js"></script> 
+    alert(
+      "Your dream has been prepared. Secure online storage will be added before public launch. 🌙"
+    );
+
+  }
+
+</script>
+
 </body>
 </html>
