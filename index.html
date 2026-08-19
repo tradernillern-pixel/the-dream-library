@@ -518,124 +518,128 @@
 
 <script src="app.js"></script>
 
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
 
-  function showPage(pageId) {
+  // THE DREAM LIBRARY - SUPABASE CONNECTION
 
-    const pages =
-      document.querySelectorAll('.page');
+  const SUPABASE_URL = "https://oftwyqrblzncwirihjje.supabase.co";
 
-    pages.forEach(function(page) {
-      page.classList.remove('active');
-    });
+  const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_Hey4zEst-TD0P8Yx2tsL8g_5i4ae1ec";
 
-    document
-      .getElementById(pageId)
-      .classList.add('active');
-
-    window.scrollTo(0, 0);
-  }
-
-
-  function selectChoice(element) {
-
-    const choices =
-      document.querySelectorAll('.choice');
-
-    choices.forEach(function(choice) {
-      choice.classList.remove('selected');
-    });
-
-    element.classList.add('selected');
-  }
-
-
-  function saveDream() {
-
-    const pseudonym =
-      document.getElementById('pseudonym').value;
-
-    const title =
-      document.getElementById('dreamTitle').value;
-
-    const dream =
-      document.getElementById('dreamText').value;
-
-    if (!pseudonym ||
-        !title ||
-        !dream) {
-
-      alert(
-        "Please complete your pseudonym, dream title and dream."
-      );
-
-      return;
-    }
-
-    alert(
-      "Your dream has been prepared. Secure online storage will be added before public launch. 🌙"
+  const supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
     );
 
-  }
 
-</script>
-<script
-  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script >
-  <script>
-  const SUPABASE_URL = "https://oftwyqrblzncwirihjje.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Hey4zEst-TD0P8Yx2tsL8g_5i4ae1ec";
-
-  const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
-  );
+  // CREATE ACCOUNT
 
   async function signUp() {
-    const email = document.getElementById("authEmail").value;
-    const password = document.getElementById("authPassword").value;
+
+    const email =
+      document.getElementById("authEmail").value.trim();
+
+    const password =
+      document.getElementById("authPassword").value;
 
     if (!email || !password) {
+
       alert("Please enter your email and password.");
+
       return;
     }
 
-    const { error } = await supabaseClient.auth.signUp({
-      email: email,
-      password: password
-    });
+    if (password.length < 6) {
+
+      alert("Your password should contain at least 6 characters.");
+
+      return;
+    }
+
+    const { data, error } =
+      await supabaseClient.auth.signUp({
+        email: email,
+        password: password
+      });
 
     if (error) {
-      alert(error.message);
+
+      alert("Sign-up error: " + error.message);
+
       return;
     }
 
     alert(
-      "Account created. Please check your email and confirm your account."
+      "Account created! Please check your email and confirm your account before signing in. 🌙"
     );
   }
 
-  async function signIn() </script>
-    const email = document.getElementById("authEmail").value;
-    const password = document.getElementById("authPassword").value;
+
+  // SIGN IN
+
+  async function signIn() {
+
+    const email =
+      document.getElementById("authEmail").value.trim();
+
+    const password =
+      document.getElementById("authPassword").value;
 
     if (!email || !password) {
+
       alert("Please enter your email and password.");
+
       return;
     }
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
 
     if (error) {
-      alert(error.message);
+
+      alert("Sign-in error: " + error.message);
+
       return;
     }
 
-    alert("Welcome to The Dream Library. 🌙");
+    alert("Welcome back to The Dream Library. 🌙");
+
     showPage("recorder");
   }
+
+
+  // CHECK CURRENT USER
+
+  async function checkUser() {
+
+    const { data } =
+      await supabaseClient.auth.getUser();
+
+    if (data.user) {
+
+      console.log(
+        "Signed in user:",
+        data.user.id
+      );
+
+    } else {
+
+      console.log("No user currently signed in.");
+
+    }
+  }
+
+
+  checkUser();
+  
 </script>
 </body>
 </html>
