@@ -1,12 +1,31 @@
 // THE DREAM LIBRARY
-// Main website application file
+// Main website application
+
+function showPage(pageId) {
+
+  const pages = document.querySelectorAll(".page");
+
+  pages.forEach(function(page) {
+    page.classList.remove("active");
+  });
+
+  const selectedPage =
+    document.getElementById(pageId);
+
+  if (selectedPage) {
+    selectedPage.classList.add("active");
+  }
+
+  window.scrollTo(0, 0);
+}
+
+
+// Temporary button functions
 
 function recordDream() {
-  alert("The Dream Recorder will open here.");
+  showPage("recorder");
 }
 
 function exploreDreams() {
-  alert("The Dream Library will open here.");
+  showPage("library");
 }
-
-console.log("The Dream Library is running.");
