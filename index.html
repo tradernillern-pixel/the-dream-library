@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>The Dream Library</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #07111f;
+      color: white;
+      min-height: 100vh;
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px 20px;
+      background:
+        radial-gradient(circle at top, #183b68 0%, #07111f 55%);
+    }
+
+    .container {
+      max-width: 700px;
+    }
+
+    .moon {
+      font-size: 70px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 42px;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+    }
+
+    .tagline {
+      font-size: 20px;
+      color: #b9c9dc;
+      line-height: 1.6;
+      margin-bottom: 35px;
+    }
+
+    .intro {
+      color: #dce7f3;
+      line-height: 1.7;
+      margin-bottom: 35px;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      padding: 15px 25px;
+      border-radius: 30px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .primary {
+      background: #ffffff;
+      color: #07111f;
+    }
+
+    .secondary {
+      background: transparent;
+      color: white;
+      border: 1px solid #7186a0;
+    }
+
+    .quote {
+      margin-top: 55px;
+      font-style: italic;
+      color: #91a6bd;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 13px;
+      color: #647991;
+    }
+  </style>
+</head>
+
+<body>
+
+  <section class="hero">
+
+    <div class="container">
+
+      <div class="moon">🌙</div>
+
+      <h1>THE DREAM LIBRARY</h1>
+
+      <p class="tagline">
+        Where humanity's dreams are remembered.
+      </p>
+
+      <p class="intro">
+        Every night, millions of people dream.
+        Some dreams are forgotten within minutes.
+        Others stay with us for a lifetime.
+        <br><br>
+        The Dream Library is a place to record,
+        preserve and explore the dreams of humanity.
+      </p>
+
+      <div class="buttons">
+
+        <button class="primary" onclick="recordDream()">
+          ✍️ Record My Dream
+        </button>
+
+        <button class="secondary" onclick="exploreDreams()">
+          📖 Explore Dreams
+        </button>
+
+      </div>
+
+      <p class="quote">
+        "Every dream deserves a place to be remembered."
+      </p>
+
+      <footer>
+        The Dream Library · A growing archive of human dreams
+      </footer>
+
+    </div>
+
+  </section>
+
+  <script>
+    function recordDream() {
+      alert("The Dream Recorder is coming next. 🌙");
+    }
+
+    function exploreDreams() {
+      alert("The Dream Library is coming next. 📖");
+    }
+  </script>
+
+</body>
+</html>
