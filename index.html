@@ -203,6 +203,7 @@
 
   <nav>
     <button onclick="showPage('home')">Home</button>
+    <button onclick="showPage('auth')">Sign In</button>
     <button onclick="showPage('recorder')">Record a Dream</button>
     <button onclick="showPage('library')">Explore Dreams</button>
   </nav>
@@ -248,7 +249,58 @@
 
 </section>
 
+<!-- AUTHENTICATION -->
 
+<section id="auth" class="page">
+
+  <h2>Welcome to The Dream Library</h2>
+
+  <p class="tagline">
+    Create an account to protect and manage your dreams.
+  </p>
+
+  <div class="card">
+
+    <label for="authEmail">Email</label>
+
+    <input
+      type="email"
+      id="authEmail"
+      placeholder="Your email address"
+    >
+
+    <label for="authPassword">Password</label>
+
+    <input
+      type="password"
+      id="authPassword"
+      placeholder="Create a password"
+    >
+
+    <button
+      class="save-button"
+      onclick="signUp()">
+      Create Account
+    </button>
+
+    <button
+      class="outline-button"
+      onclick="signIn()">
+      Sign In
+    </button>
+
+    <div class="privacy">
+
+      🔒 Your email is used for account
+      authentication. Your public identity
+      in the Dream Library will be your
+      chosen pseudonym.
+
+    </div>
+
+  </div>
+
+</section>
 <!-- DREAM RECORDER -->
 
 <section id="recorder" class="page">
@@ -527,6 +579,63 @@
   }
 
 </script>
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/ supabase-js@2"></script >
+  <script>
+  const SUPABASE_URL = "https://oftwyqrblzncwirihjje.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Hey4zEst-TD0P8Yx2tsL8g_5i4ae1ec";
 
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+  async function signUp() {
+    const email = document.getElementById("authEmail").value;
+    const password = document.getElementById("authPassword").value;
+
+    if (!email || !password) {
+      alert("Please enter your email and password.");
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.signUp({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert(
+      "Account created. Please check your email and confirm your account."
+    );
+  }
+
+  async function signIn() {
+    const email = document.getElementById("authEmail").value;
+    const password = document.getElementById("authPassword").value;
+
+    if (!email || !password) {
+      alert("Please enter your email and password.");
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert("Welcome to The Dream Library. 🌙");
+    showPage("recorder");
+  }
+</script>
 </body>
 </html>
