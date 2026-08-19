@@ -428,27 +428,35 @@
 
     </select>
 
+<label for="visibility">
+  Who can read this dream?
+</label>
 
-    <div class="privacy">
+<select id="visibility">
 
-      <strong>🔒 Privacy first</strong>
+  <option value="private">
+    🔒 Private — only me
+  </option>
 
-      <br><br>
+  <option value="public">
+    🌍 Public — share anonymously
+  </option>
 
-      This first version does not permanently
-      store your dream online.
+</select>
 
-      <br><br>
+<div class="privacy">
 
-      Before we launch publicly, we will build
-      secure storage and give you clear control
-      over whether your dream remains private
-      or is shared anonymously.
+  <strong>🔒 Your choice matters</strong>
 
-    </div>
+  <br><br>
 
+  Your dream is private by default.
+  You decide whether it can become part
+  of the public Dream Library.
 
-    <button
+</div>
+
+<button>
       class="save-button"
       onclick="saveDream()">
 
@@ -615,6 +623,98 @@
     showPage("recorder");
   }
 
+
+  // SAVE DREAM TO SUPABASE
+
+async function saveDream() {
+
+  const { data: userData, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !userData.user) {
+
+    alert("Please sign in before saving your dream. 🔐");
+
+    showPage("auth");
+
+    return;
+  }
+
+  const user = userData.user;
+
+  const pseudonym =
+    document.getElementById("pseudonym").value.trim();
+
+  const title =
+    document.getElementById("dreamTitle").value.trim();
+
+  const dream =
+    document.getElementById("dreamText").value.trim();
+
+  const category =
+    document.getElementById("category").value;
+
+  const visibility =
+    document.getElementById("visibility").value;
+
+  const selectedEmotion =
+    document.querySelector(".choice.selected");
+
+  const emotion =
+    selectedEmotion
+      ? selectedEmotion.textContent.trim()
+      : "";
+
+  if (!pseudonym || !title || !dream) {
+
+    alert(
+      "Please complete your pseudonym, dream title and dream."
+    );
+
+    return;
+  }
+
+  const { error } =
+    await supabaseClient
+      .from("dreams")
+      .insert({
+        user_id: user.id,
+        pseudonym: pseudonym,
+        title: title,
+        dream_text: dream,
+        emotion: emotion,
+        category: category,
+        visibility: visibility
+      });
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "Your dream could not be saved: " +
+      error.message
+    );
+
+    return;
+  }
+
+  alert("🌙 Your dream has been safely recorded.");
+
+}
+// SELECT DREAM EMOTION
+
+function selectChoice(choice) {
+
+  document
+    .querySelectorAll(".choice")
+    .forEach(function(item) {
+      item.classList.remove("selected");
+    });
+
+  choice.classList.add("selected");
+}
+  
 
   // CHECK CURRENT USER
 
