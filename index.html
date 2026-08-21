@@ -498,44 +498,23 @@
 <section id="library" class="page">
 
   <h2>Explore Dreams</h2>
+<h2>Explore Dreams</h2>
 
-  <p class="tagline">
-    A future collection of dreams from humanity.
-  </p>
+<p class="tagline">
+  Anonymous dreams shared by people around the world.
+</p>
 
-  <div class="card">
+<div class="card">
 
-    <div class="dream-item">
+  <div id="publicDreamsList">
 
-      <h3>🌊 The Ocean</h3>
-
-      <p>
-        A dream recorded by
-        <strong>OceanWalker</strong>.
-      </p>
-
-      <p>
-        The full worldwide Dream Library
-        will appear here once dream sharing
-        is connected to our secure database.
-      </p>
-
-    </div>
-
-
-    <div class="dream-item">
-
-      <h3>🕊️ Flying</h3>
-
-      <p>
-        Dreams about freedom, movement
-        and discovering unknown places.
-      </p>
-
-    </div>
+    <p>
+      🔄 Loading public dreams...
+    </p>
 
   </div>
 
+</div>
 </section>
 
 
@@ -836,6 +815,80 @@ function escapeHTML(text) {
     text || "";
 
   return div.innerHTML;
+}
+  // LOAD PUBLIC DREAMS
+
+async function loadPublicDreams() {
+
+  const list =
+    document.getElementById("publicDreamsList");
+
+  if (!list) return;
+
+  const { data: dreams, error } =
+    await supabaseClient
+      .from("dreams")
+      .select("*")
+      .eq("visibility", "public")
+      .order("created_at", { ascending: false });
+
+  if (error) {
+
+    console.error(error);
+
+    list.innerHTML =
+      "<p>Unable to load public dreams.</p>";
+
+    return;
+  }
+
+  if (!dreams || dreams.length === 0) {
+
+    list.innerHTML =
+      "<p>🌙 No public dreams have been shared yet.</p>";
+
+    return;
+  }
+
+  list.innerHTML = "";
+
+  dreams.forEach(function(dream) {
+
+    const item =
+      document.createElement("div");
+
+    item.className = "dream-item";
+
+    item.innerHTML = `
+      <h3>🌙 ${escapeHTML(dream.title)}</h3>
+
+      <p>
+        Dream by
+        <strong>${escapeHTML(dream.pseudonym)}</strong>
+      </p>
+
+      <p>
+        ${escapeHTML(dream.dream_text)}
+      </p>
+
+      <p>
+        ${dream.emotion
+          ? "Feeling: " + escapeHTML(dream.emotion)
+          : ""}
+
+        ${dream.category
+          ? " · " + escapeHTML(dream.category)
+          : ""}
+      </p>
+
+      <small>
+        🌍 Shared anonymously
+      </small>
+    `;
+
+    list.appendChild(item);
+
+  });
 }
 
   // CHECK CURRENT USER
