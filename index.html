@@ -570,10 +570,14 @@
     }
 
     const { data, error } =
-      await supabaseClient.auth.signUp({
-        email: email,
-        password: password
-      });
+  await supabaseClient.auth.signUp({
+    email: email,
+    password: password,
+    options: {
+      emailRedirectTo:
+        "https://tradernillern-pixel.github.io/the-dream-library/"
+    }
+  });
 
     if (error) {
 
