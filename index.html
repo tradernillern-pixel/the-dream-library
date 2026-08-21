@@ -631,7 +631,7 @@
   }
 
 
-  // SAVE DREAM TO SUPABASE
+// SAVE OR UPDATE DREAM
 
 async function saveDream() {
 
@@ -681,32 +681,90 @@ async function saveDream() {
     return;
   }
 
-  const { error } =
-    await supabaseClient
-      .from("dreams")
-      .insert({
-        user_id: user.id,
-        pseudonym: pseudonym,
-        title: title,
-        dream_text: dream,
-        emotion: emotion,
-        category: category,
-        visibility: visibility
-      });
 
-  if (error) {
+  // UPDATE EXISTING DREAM
 
-    console.error(error);
+  if (window.editingDreamId) {
 
-    alert(
-      "Your dream could not be saved: " +
-      error.message
-    );
+    const { error } =
+      await supabaseClient
+        .from("dreams")
+        .update({
+          pseudonym: pseudonym,
+          title: title,
+          dream_text: dream,
+          emotion: emotion,
+          category: category,
+          visibility: visibility
+        })
+        .eq("id", window.editingDreamId)
+        .eq("user_id", user.id);
 
-    return;
+    if (error) {
+
+      console.error(error);
+
+      alert(
+        "Your dream could not be updated: " +
+        error.message
+      );
+
+      return;
+    }
+
+    alert("🌙 Your dream has been updated.");
+
+    window.editingDreamId = null;
+
   }
 
-  alert("🌙 Your dream has been safely recorded.");
+  // CREATE NEW DREAM
+
+  else {
+
+    const { error } =
+      await supabaseClient
+        .from("dreams")
+        .insert({
+          user_id: user.id,
+          pseudonym: pseudonym,
+          title: title,
+          dream_text: dream,
+          emotion: emotion,
+          category: category,
+          visibility: visibility
+        });
+
+    if (error) {
+
+      console.error(error);
+
+      alert(
+        "Your dream could not be saved: " +
+        error.message
+      );
+
+      return;
+    }
+
+    alert("🌙 Your dream has been safely recorded.");
+
+  }
+
+
+  // CLEAR FORM
+
+  document.getElementById("pseudonym").value = "";
+  document.getElementById("dreamTitle").value = "";
+  document.getElementById("dreamText").value = "";
+  document.getElementById("category").value = "";
+  document.getElementById("visibility").value = "private";
+
+  document
+    .querySelectorAll(".choice")
+    .forEach(function(choice) {
+      choice.classList.remove("selected");
+    });
 
 }
 // SELECT DREAM EMOTION
@@ -798,7 +856,11 @@ async function loadMyDreams() {
 </small>
 
 <br><br>
-
+<button
+  class="save-button"
+  onclick="editDream('${dream.id}')">
+  ✏️ Edit Dream
+</button>
 <button
   class="outline-button"
   onclick="deleteDream('${dream.id}')">
@@ -872,7 +934,79 @@ async function deleteDream(dreamId) {
 
   loadMyDreams();
 }
+// EDIT MY DREAM
 
+async function editDream(dreamId) {
+
+  const { data: userData, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !userData.user) {
+
+    alert("Please sign in first. 🔐");
+
+    showPage("auth");
+
+    return;
+  }
+
+  const { data: dream, error } =
+    await supabaseClient
+      .from("dreams")
+      .select("*")
+      .eq("id", dreamId)
+      .eq("user_id", userData.user.id)
+      .single();
+
+  if (error || !dream) {
+
+    alert("We couldn't find that dream.");
+
+    return;
+  }
+
+  document.getElementById("pseudonym").value =
+    dream.pseudonym || "";
+
+  document.getElementById("dreamTitle").value =
+    dream.title || "";
+
+  document.getElementById("dreamText").value =
+    dream.dream_text || "";
+
+  document.getElementById("category").value =
+    dream.category || "";
+
+  document.getElementById("visibility").value =
+    dream.visibility || "private";
+
+
+  // SELECT THE EMOTION
+
+  document
+    .querySelectorAll(".choice")
+    .forEach(function(choice) {
+
+      choice.classList.remove("selected");
+
+      if (
+        dream.emotion &&
+        choice.textContent.includes(dream.emotion)
+      ) {
+        choice.classList.add("selected");
+      }
+
+    });
+
+
+  // REMEMBER WHICH DREAM WE ARE EDITING
+
+  window.editingDreamId = dreamId;
+
+  showPage("recorder");
+
+}
+  
   // LOAD PUBLIC DREAMS
 
 async function loadPublicDreams() {
