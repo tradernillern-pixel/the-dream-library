@@ -2,7 +2,9 @@
 // Main website application
 
 
+// ================================
 // PAGE NAVIGATION
+// ================================
 
 function showPage(pageId) {
 
@@ -23,7 +25,7 @@ function showPage(pageId) {
   window.scrollTo(0, 0);
 
 
-  // LOAD USER'S DREAMS
+  // LOAD MY DREAMS
 
   if (pageId === "my-dreams") {
 
@@ -33,10 +35,23 @@ function showPage(pageId) {
 
   }
 
+
+  // LOAD PUBLIC DREAMS
+
+  if (pageId === "library") {
+
+    if (typeof loadPublicDreams === "function") {
+      loadPublicDreams();
+    }
+
+  }
+
 }
 
 
+// ================================
 // RECORD DREAM
+// ================================
 
 function recordDream() {
 
@@ -45,7 +60,9 @@ function recordDream() {
 }
 
 
+// ================================
 // EXPLORE DREAMS
+// ================================
 
 function exploreDreams() {
 
