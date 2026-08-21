@@ -791,19 +791,26 @@ async function loadMyDreams() {
         ${dream.category ? " · " + escapeHTML(dream.category) : ""}
       </p>
 
-      <small>
-        ${dream.visibility === "public"
-          ? "🌍 Public"
-          : "🔒 Private"}
-      </small>
-    `;
+     <small>
+  ${dream.visibility === "public"
+    ? "🌍 Public"
+    : "🔒 Private"}
+</small>
+
+<br><br>
+
+<button
+  class="outline-button"
+  onclick="deleteDream('${dream.id}')">
+  🗑️ Delete Dream
+</button>
+
+`;
 
     list.appendChild(item);
 
   });
 }
-
-
 // SAFELY DISPLAY USER CONTENT
 
 function escapeHTML(text) {
@@ -816,6 +823,56 @@ function escapeHTML(text) {
 
   return div.innerHTML;
 }
+  
+// DELETE MY DREAM
+
+async function deleteDream(dreamId) {
+
+  const confirmed =
+    confirm(
+      "Are you sure you want to delete this dream? This cannot be undone."
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { data: userData, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !userData.user) {
+
+    alert("Please sign in first. 🔐");
+
+    showPage("auth");
+
+    return;
+  }
+
+  const { error } =
+    await supabaseClient
+      .from("dreams")
+      .delete()
+      .eq("id", dreamId)
+      .eq("user_id", userData.user.id);
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "The dream could not be deleted: " +
+      error.message
+    );
+
+    return;
+  }
+
+  alert("🌙 Your dream has been deleted.");
+
+  loadMyDreams();
+}
+
   // LOAD PUBLIC DREAMS
 
 async function loadPublicDreams() {
