@@ -1,9 +1,13 @@
 // THE DREAM LIBRARY
 // Main website application
 
+
+// PAGE NAVIGATION
+
 function showPage(pageId) {
 
-  const pages = document.querySelectorAll(".page");
+  const pages =
+    document.querySelectorAll(".page");
 
   pages.forEach(function(page) {
     page.classList.remove("active");
@@ -17,15 +21,34 @@ function showPage(pageId) {
   }
 
   window.scrollTo(0, 0);
+
+
+  // LOAD USER'S DREAMS
+
+  if (pageId === "my-dreams") {
+
+    if (typeof loadMyDreams === "function") {
+      loadMyDreams();
+    }
+
+  }
+
 }
 
 
-// Temporary button functions
+// RECORD DREAM
 
 function recordDream() {
+
   showPage("recorder");
+
 }
 
+
+// EXPLORE DREAMS
+
 function exploreDreams() {
+
   showPage("library");
+
 }
