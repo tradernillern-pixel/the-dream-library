@@ -1058,6 +1058,42 @@ async function editDream(dreamId) {
   showPage("recorder");
 
 }
+// LOAD PUBLIC DREAMS
+
+let publicDreams = [];
+
+async function loadPublicDreams() {
+
+  const list =
+    document.getElementById("publicDreamsList");
+
+  if (!list) return;
+
+  list.innerHTML =
+    "<p>🔄 Loading public dreams...</p>";
+
+  const { data: dreams, error } =
+    await supabaseClient
+      .from("dreams")
+      .select("*")
+      .eq("visibility", "public")
+      .order("created_at", { ascending: false });
+
+  if (error) {
+
+    console.error("Public dreams error:", error);
+
+    list.innerHTML =
+      "<p>Unable to load public dreams.</p>";
+
+    return;
+  }
+
+  publicDreams = dreams || [];
+
+  renderPublicDreams(publicDreams);
+}
+  
   // FILTER PUBLIC DREAMS
 
 function filterPublicDreams() {
