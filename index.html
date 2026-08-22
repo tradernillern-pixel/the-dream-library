@@ -615,12 +615,10 @@
 </footer>
 
 
-<script src="app.js"></script>
-
 <script
   src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script>
+<script src="app.js"></script>
 
   // THE DREAM LIBRARY - SUPABASE CONNECTION
 
@@ -1188,24 +1186,7 @@ function filterPublicDreams() {
 
   renderPublicDreams(filtered);
 }
-
-// DISPLAY PUBLIC DREAMS
-
-function renderPublicDreams(dreams) {
-
-  const list =
-    document.getElementById("publicDreamsList");
-
-  if (!list) return;
-
-  if (!dreams || dreams.length === 0) {
-
-    list.innerHTML =
-      "<p>🌙 No dreams match your search.</p>";
-
-    return;
-  }
-  // VIEW FULL PUBLIC DREAM
+// VIEW FULL PUBLIC DREAM
 
 async function viewDream(dreamId) {
 
@@ -1273,6 +1254,23 @@ async function viewDream(dreamId) {
 
   showPage("dream-details");
 }
+  
+// DISPLAY PUBLIC DREAMS
+
+function renderPublicDreams(dreams) {
+
+  const list =
+    document.getElementById("publicDreamsList");
+
+  if (!list) return;
+
+  if (!dreams || dreams.length === 0) {
+
+    list.innerHTML =
+      "<p>🌙 No dreams match your search.</p>";
+
+    return;
+  }
 
   list.innerHTML = "";
 
