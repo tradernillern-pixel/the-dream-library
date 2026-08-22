@@ -721,7 +721,7 @@ onclick="showPage('library')">
 </section>
 
 
-<!-- FAVORITES -->
+<!-- FAVORITE-->
 
 <section id="favorites" class="page">
 
@@ -743,92 +743,132 @@ Loading saved dreams...
 
 </section>
 
-
+  
 <!-- PROFILE -->
 
 <section id="profile" class="page">
 
-<h2>👤 Dreamer Profile</h2>
+  <h2>👤 Dreamer Profile</h2>
 
-<div class="card profile-header">
+  <div class="card profile-header">
 
-<div class="avatar">
-🌙
-</div>
+    <div class="avatar" id="profileAvatar">
+      🌙
+    </div>
 
-<h3 id="profileName">
-Anonymous Dreamer
-</h3>
+    <h3 id="profileName">
+      Anonymous Dreamer
+    </h3>
 
-<p id="profileBio">
-No bio yet.
-</p>
+    <p id="profileBio">
+      No bio yet.
+    </p>
 
-<div class="stat-grid">
+    <div class="button-row" style="justify-content:center;">
 
-<div class="stat">
+      <label
+        for="profileImageInput"
+        class="save-button"
+        style="display:inline-block; cursor:pointer; margin:0;">
 
-<strong id="profileDreamCount">
-0
-</strong>
+        📷 Choose Profile Photo
 
-Public Dreams
+      </label>
 
-</div>
+      <input
+        type="file"
+        id="profileImageInput"
+        accept="image/*"
+        style="display:none;"
+        onchange="previewProfileImage(event)">
 
-<div class="stat">
+      <button
+        class="outline-button"
+        onclick="removeProfilePhoto()">
 
-<strong id="profileReactionCount">
-0
-</strong>
+        🗑️ Remove Photo
 
-Reactions
+      </button>
 
-</div>
+    </div>
 
-</div>
+    <p
+      id="profilePhotoStatus"
+      class="meta">
+    </p>
 
-</div>
+    <div class="stat-grid">
 
+      <div class="stat">
 
-<div class="card">
+        <strong id="profileDreamCount">
+          0
+        </strong>
 
-<h3>Edit Your Profile</h3>
+        Public Dreams
 
-<label>Display Name</label>
+      </div>
 
-<input
-id="profileDisplayName"
-placeholder="Your dreamer name">
+      <div class="stat">
 
-<label>Bio</label>
+        <strong id="profileReactionCount">
+          0
+        </strong>
 
-<textarea
-id="profileBioInput"
-placeholder="Tell the Dream Library something about you..."></textarea>
+        Reactions
 
-<button
-class="save-button"
-onclick="saveProfile()">
+      </div>
 
-💾 Save Profile
+    </div>
 
-</button>
-
-</div>
+  </div>
 
 
-<div
-id="profileDreams"
-class="card">
+  <div class="card">
 
-<h3>🌙 Your Public Dreams</h3>
+    <h3>✏️ Edit Your Profile</h3>
 
-<p class="empty">
-Loading...
-</p>
+    <label>
+      Display Name
+    </label>
 
-</div>
+    <input
+      id="profileDisplayName"
+      placeholder="Your dreamer name">
+
+    <label>
+      Bio
+    </label>
+
+    <textarea
+      id="profileBioInput"
+      placeholder="Tell the Dream Library something about you...">
+    </textarea>
+
+    <button
+      class="save-button"
+      onclick="saveProfile()">
+
+      💾 Save Profile
+
+    </button>
+
+  </div>
+
+
+  <div
+    id="profileDreams"
+    class="card">
+
+    <h3>
+      🌙 Public Dreams
+    </h3>
+
+    <p class="empty">
+      Loading...
+    </p>
+
+  </div>
 
 </section>
 
@@ -2476,370 +2516,652 @@ list.appendChild(item);
 }
 );
 
-}
-
+  }
 
 /* ==================================================
-   PROFILE
+   PROFILE + PROFILE PHOTO
    ================================================== */
 
 async function loadProfile() {
 
-const { data: userData } =
-await supabaseClient.auth.getUser();
+  const { data: userData } =
+    await supabaseClient.auth.getUser();
 
+  if (!userData.user) {
 
-if (!userData.user) {
+    document.getElementById(
+      "profileName"
+    ).textContent =
+      "🔐 Sign in to create your profile.";
 
-document.getElementById(
-"profileName"
-).textContent =
-"🔐 Sign in to create your profile.";
+    return;
+  }
 
-return;
+  const userId =
+    userData.user.id;
 
-}
 
+  let { data: profile } =
+    await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-const userId =
-userData.user.id;
 
+  if (!profile) {
 
-let { data: profile } =
-await supabaseClient
-.from("profiles")
-.select("*")
-.eq(
-"user_id",
-userId
-)
-.maybeSingle();
+    const { error } =
+      await supabaseClient
+        .from("profiles")
+        .insert({
+          user_id: userId
+        });
 
+    if (error) {
 
-if (!profile) {
+      console.error(error);
 
-await supabaseClient
-.from("profiles")
-.insert({
+      return;
+    }
 
-user_id:userId
+    const response =
+      await supabaseClient
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
 
-});
+    profile =
+      response.data;
+  }
 
 
-const response =
-await supabaseClient
-.from("profiles")
-.select("*")
-.eq(
-"user_id",
-userId
-)
-.single();
+  displayProfileData(profile);
 
-profile =
-response.data;
-
-}
-
-
-document.getElementById(
-"profileName"
-).textContent =
-profile.display_name ||
-profile.pseudonym ||
-"Anonymous Dreamer";
-
-
-document.getElementById(
-"profileBio"
-).textContent =
-profile.bio ||
-"No bio yet.";
-
-
-document.getElementById(
-"profileDisplayName"
-).value =
-profile.display_name || "";
-
-
-document.getElementById(
-"profileBioInput"
-).value =
-profile.bio || "";
-
-
-const stats =
-await supabaseClient
-.rpc(
-"get_profile_statistics",
-{
-profile_user_id:userId
-}
-);
-
-
-if (stats.data) {
-
-document.getElementById(
-"profileDreamCount"
-).textContent =
-stats.data.public_dreams || 0;
-
-
-document.getElementById(
-"profileReactionCount"
-).textContent =
-stats.data.total_reactions || 0;
-
-}
-
-
-loadProfileDreams(
-userId
-);
-
-}
-
-
-async function saveProfile() {
-
-const { data: userData } =
-await supabaseClient.auth.getUser();
-
-
-if (!userData.user) {
-
-showPage("auth");
-
-return;
-
-}
-
-
-const displayName =
-document.getElementById(
-"profileDisplayName"
-).value.trim();
-
-
-const bio =
-document.getElementById(
-"profileBioInput"
-).value.trim();
-
-
-const { error } =
-await supabaseClient
-.from("profiles")
-.update({
-
-display_name:
-displayName,
-
-bio:
-bio
-
-})
-.eq(
-"user_id",
-userData.user.id
-);
-
-
-if (error) {
-
-alert(error.message);
-
-return;
-
-}
-
-
-alert(
-"👤 Profile updated."
-);
-
-loadProfile();
-
-}
-
-
-async function loadProfileDreams(
-userId
-) {
-
-const container =
-document.getElementById(
-"profileDreams"
-);
-
-
-const { data, error } =
-await supabaseClient
-.from("dreams")
-.select("*")
-.eq(
-"user_id",
-userId
-)
-.eq(
-"visibility",
-"public"
-)
-.order(
-"created_at",
-{ ascending:false }
-);
-
-
-if (error) {
-
-container.innerHTML =
-"<h3>🌙 Your Public Dreams</h3><p>Unable to load dreams.</p>";
-
-return;
-
-}
-
-
-if (!data.length) {
-
-container.innerHTML =
-"<h3>🌙 Your Public Dreams</h3><p class='empty'>No public dreams yet.</p>";
-
-return;
-
-}
-
-
-container.innerHTML =
-"<h3>🌙 Your Public Dreams</h3>";
-
-
-data.forEach(
-function(dream) {
-
-const item =
-document.createElement(
-"div"
-);
-
-item.className =
-"dream-item";
-
-
-item.innerHTML = `
-
-<h3>
-🌙 ${escapeHTML(
-dream.title
-)}
-</h3>
-
-<p>
-${escapeHTML(
-dream.dream_text
-)}
-</p>
-
-<button
-class="save-button"
-onclick="viewDream('${dream.id}')">
-
-📖 Read
-
-</button>
-
-`;
-
-
-container.appendChild(item);
-
-}
-);
+  loadProfileDreams(userId);
 
 }
 
 
 /* ==================================================
-   VIEW OTHER DREAMER
+   DISPLAY PROFILE
+   ================================================== */
+
+function displayProfileData(profile) {
+
+  const name =
+    profile.display_name ||
+    profile.pseudonym ||
+    "Anonymous Dreamer";
+
+
+  document.getElementById(
+    "profileName"
+  ).textContent =
+    name;
+
+
+  document.getElementById(
+    "profileBio"
+  ).textContent =
+    profile.bio ||
+    "No bio yet.";
+
+
+  document.getElementById(
+    "profileDisplayName"
+  ).value =
+    profile.display_name || "";
+
+
+  document.getElementById(
+    "profileBioInput"
+  ).value =
+    profile.bio || "";
+
+
+  const avatar =
+    document.getElementById(
+      "profileAvatar"
+    );
+
+
+  if (profile.avatar_url) {
+
+    avatar.innerHTML = `
+      <img
+        src="${escapeHTML(profile.avatar_url)}"
+        alt="Dreamer profile photo"
+        style="
+          width:75px;
+          height:75px;
+          border-radius:50%;
+          object-fit:cover;
+        ">
+    `;
+
+  } else {
+
+    avatar.textContent = "🌙";
+
+  }
+
+}
+
+
+/* ==================================================
+   PROFILE PHOTO PREVIEW
+   ================================================== */
+
+function previewProfileImage(event) {
+
+  const file =
+    event.target.files[0];
+
+  if (!file) return;
+
+
+  if (!file.type.startsWith("image/")) {
+
+    alert(
+      "Please choose an image file."
+    );
+
+    return;
+  }
+
+
+  if (file.size > 5 * 1024 * 1024) {
+
+    alert(
+      "Please choose an image smaller than 5 MB."
+    );
+
+    return;
+  }
+
+
+  const reader =
+    new FileReader();
+
+
+  reader.onload =
+    function(e) {
+
+      document.getElementById(
+        "profileAvatar"
+      ).innerHTML = `
+
+        <img
+          src="${e.target.result}"
+          alt="Profile preview"
+          style="
+            width:75px;
+            height:75px;
+            border-radius:50%;
+            object-fit:cover;
+          ">
+
+      `;
+
+    };
+
+
+  reader.readAsDataURL(file);
+
+
+  uploadProfilePhoto(file);
+
+}
+
+
+/* ==================================================
+   UPLOAD PROFILE PHOTO
+   ================================================== */
+
+async function uploadProfilePhoto(file) {
+
+  const status =
+    document.getElementById(
+      "profilePhotoStatus"
+    );
+
+
+  status.textContent =
+    "⏳ Uploading profile photo...";
+
+
+  const { data: userData, error: userError } =
+    await supabaseClient.auth.getUser();
+
+
+  if (userError || !userData.user) {
+
+    status.textContent =
+      "🔐 Please sign in first.";
+
+    return;
+  }
+
+
+  const userId =
+    userData.user.id;
+
+
+  const fileExtension =
+    file.name
+      .split(".")
+      .pop()
+      .toLowerCase();
+
+
+  const filePath =
+    userId +
+    "/" +
+    Date.now() +
+    "." +
+    fileExtension;
+
+
+  const { error: uploadError } =
+    await supabaseClient.storage
+      .from("profile-images")
+      .upload(
+        filePath,
+        file,
+        {
+          cacheControl: "3600",
+          upsert: false
+        }
+      );
+
+
+  if (uploadError) {
+
+    console.error(uploadError);
+
+    status.textContent =
+      "❌ Upload failed.";
+
+    alert(
+      uploadError.message
+    );
+
+    return;
+  }
+
+
+  const { data: publicData } =
+    supabaseClient.storage
+      .from("profile-images")
+      .getPublicUrl(filePath);
+
+
+  const imageUrl =
+    publicData.publicUrl;
+
+
+  const { error: updateError } =
+    await supabaseClient
+      .from("profiles")
+      .update({
+        avatar_url: imageUrl
+      })
+      .eq(
+        "user_id",
+        userId
+      );
+
+
+  if (updateError) {
+
+    console.error(updateError);
+
+    status.textContent =
+      "❌ Could not save photo.";
+
+    return;
+  }
+
+
+  status.textContent =
+    "✅ Profile photo updated.";
+
+}
+
+
+/* ==================================================
+   REMOVE PROFILE PHOTO
+   ================================================== */
+
+async function removeProfilePhoto() {
+
+  const { data: userData } =
+    await supabaseClient.auth.getUser();
+
+
+  if (!userData.user) {
+
+    showPage("auth");
+
+    return;
+  }
+
+
+  const userId =
+    userData.user.id;
+
+
+  const { data: profile } =
+    await supabaseClient
+      .from("profiles")
+      .select("avatar_url")
+      .eq(
+        "user_id",
+        userId
+      )
+      .single();
+
+
+  if (!profile || !profile.avatar_url) {
+
+    alert(
+      "You don't have a profile photo."
+    );
+
+    return;
+  }
+
+
+  const { error } =
+    await supabaseClient
+      .from("profiles")
+      .update({
+        avatar_url: null
+      })
+      .eq(
+        "user_id",
+        userId
+      );
+
+
+  if (error) {
+
+    alert(error.message);
+
+    return;
+  }
+
+
+  document.getElementById(
+    "profileAvatar"
+  ).textContent =
+    "🌙";
+
+
+  document.getElementById(
+    "profilePhotoStatus"
+  ).textContent =
+    "🗑️ Profile photo removed.";
+
+}
+
+
+/* ==================================================
+   SAVE PROFILE
+   ================================================== */
+
+async function saveProfile() {
+
+  const { data: userData } =
+    await supabaseClient.auth.getUser();
+
+
+  if (!userData.user) {
+
+    showPage("auth");
+
+    return;
+  }
+
+
+  const displayName =
+    document.getElementById(
+      "profileDisplayName"
+    ).value.trim();
+
+
+  const bio =
+    document.getElementById(
+      "profileBioInput"
+    ).value.trim();
+
+
+  const { error } =
+    await supabaseClient
+      .from("profiles")
+      .update({
+
+        display_name:
+          displayName,
+
+        bio:
+          bio
+
+      })
+      .eq(
+        "user_id",
+        userData.user.id
+      );
+
+
+  if (error) {
+
+    alert(error.message);
+
+    return;
+  }
+
+
+  alert(
+    "👤 Profile updated."
+  );
+
+
+  loadProfile();
+
+}
+
+
+/* ==================================================
+   PROFILE DREAMS
+   ================================================== */
+
+async function loadProfileDreams(
+  userId
+) {
+
+  const container =
+    document.getElementById(
+      "profileDreams"
+    );
+
+
+  const { data, error } =
+    await supabaseClient
+      .from("dreams")
+      .select("*")
+      .eq(
+        "user_id",
+        userId
+      )
+      .eq(
+        "visibility",
+        "public"
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (error) {
+
+    container.innerHTML = `
+
+      <h3>🌙 Public Dreams</h3>
+
+      <p>
+        Unable to load dreams.
+      </p>
+
+    `;
+
+    return;
+  }
+
+
+  if (!data.length) {
+
+    container.innerHTML = `
+
+      <h3>🌙 Public Dreams</h3>
+
+      <p class="empty">
+        No public dreams yet.
+      </p>
+
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML =
+    "<h3>🌙 Public Dreams</h3>";
+
+
+  data.forEach(
+    function(dream) {
+
+      const item =
+        document.createElement(
+          "div"
+        );
+
+
+      item.className =
+        "dream-item";
+
+
+      item.innerHTML = `
+
+        <h3>
+          🌙 ${escapeHTML(
+            dream.title
+          )}
+        </h3>
+
+        <p>
+          ${escapeHTML(
+            dream.dream_text
+          )}
+        </p>
+
+        <button
+          class="save-button"
+          onclick="viewDream('${dream.id}')">
+
+          📖 Read Dream
+
+        </button>
+
+      `;
+
+
+      container.appendChild(
+        item
+      );
+
+    }
+  );
+
+}
+
+
+/* ==================================================
+   VIEW DREAMER PROFILE
    ================================================== */
 
 async function viewDreamer(
-userId
+  userId
 ) {
 
-const { data: profile } =
-await supabaseClient
-.from("public_dreamer_profiles")
-.select("*")
-.eq(
-"user_id",
-userId
-)
-.maybeSingle();
+  const { data: profile, error } =
+    await supabaseClient
+      .from(
+        "public_dreamer_profiles"
+      )
+      .select("*")
+      .eq(
+        "user_id",
+        userId
+      )
+      .maybeSingle();
 
 
-if (!profile) {
+  if (error || !profile) {
 
-alert(
-"Dreamer profile not found."
-);
+    alert(
+      "Dreamer profile not found."
+    );
 
-return;
-
-}
-
-
-document.getElementById(
-"profileName"
-).textContent =
-profile.display_name;
+    return;
+  }
 
 
-document.getElementById(
-"profileBio"
-).textContent =
-profile.bio ||
-"No bio yet.";
+  displayProfileData(
+    profile
+  );
 
 
-document.getElementById(
-"profileDisplayName"
-).value =
-profile.display_name || "";
+  document.getElementById(
+    "profileDisplayName"
+  ).value =
+    profile.display_name || "";
 
 
-document.getElementById(
-"profileBioInput"
-).value =
-profile.bio || "";
+  document.getElementById(
+    "profileBioInput"
+  ).value =
+    profile.bio || "";
 
 
-document.getElementById(
-"profileDreamCount"
-).textContent =
-profile.public_dreams || 0;
+  document.getElementById(
+    "profileDreamCount"
+  ).textContent =
+    profile.public_dreams || 0;
 
 
-document.getElementById(
-"profileReactionCount"
-).textContent =
-profile.reactions_received || 0;
+  document.getElementById(
+    "profileReactionCount"
+  ).textContent =
+    profile.reactions_received || 0;
 
 
-loadProfileDreams(
-userId
-);
+  loadProfileDreams(
+    userId
+  );
 
-showPage(
-"profile"
-);
+
+  showPage(
+    "profile"
+  );
 
 }
-
 
 /* ==================================================
    STATISTICS
