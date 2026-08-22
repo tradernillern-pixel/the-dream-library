@@ -497,7 +497,6 @@
 
 <section id="library" class="page">
 
-  <h2>Explore Dreams</h2>
 <h2>Explore Dreams</h2>
 
 <p class="tagline">
@@ -569,6 +568,43 @@
 </div>
 </section>
 
+  <!-- DREAM DETAILS -->
+
+<section id="dream-details" class="page">
+
+  <h2 id="dreamDetailTitle">
+    🌙 Dream
+  </h2>
+
+  <p
+    id="dreamDetailAuthor"
+    class="tagline">
+  </p>
+
+  <div class="card">
+
+    <p id="dreamDetailEmotion"></p>
+
+    <p id="dreamDetailCategory"></p>
+
+    <hr>
+
+    <p
+      id="dreamDetailContent"
+      style="white-space: pre-wrap;">
+    </p>
+
+    <br>
+
+    <button
+      class="outline-button"
+      onclick="showPage('library')">
+      ← Back to Explore Dreams
+    </button>
+
+  </div>
+
+</section>
 
 <footer>
 
@@ -1153,7 +1189,6 @@ function filterPublicDreams() {
   renderPublicDreams(filtered);
 }
 
-
 // DISPLAY PUBLIC DREAMS
 
 function renderPublicDreams(dreams) {
@@ -1170,6 +1205,74 @@ function renderPublicDreams(dreams) {
 
     return;
   }
+  // VIEW FULL PUBLIC DREAM
+
+async function viewDream(dreamId) {
+
+  const { data: dream, error } =
+    await supabaseClient
+      .from("dreams")
+      .select("*")
+      .eq("id", dreamId)
+      .eq("visibility", "public")
+      .single();
+
+  if (error || !dream) {
+
+    alert("We couldn't find that dream.");
+
+    return;
+  }
+
+  const title =
+    document.getElementById("dreamDetailTitle");
+
+  const content =
+    document.getElementById("dreamDetailContent");
+
+  const author =
+    document.getElementById("dreamDetailAuthor");
+
+  const emotion =
+    document.getElementById("dreamDetailEmotion");
+
+  const category =
+    document.getElementById("dreamDetailCategory");
+
+  if (!title || !content) {
+
+    alert("Dream details page is not available.");
+
+    return;
+  }
+
+  title.textContent =
+    "🌙 " + (dream.title || "Untitled Dream");
+
+  content.textContent =
+    dream.dream_text || "";
+
+  if (author) {
+    author.textContent =
+      "Dream by " + (dream.pseudonym || "Anonymous");
+  }
+
+  if (emotion) {
+    emotion.textContent =
+      dream.emotion
+        ? "Feeling: " + dream.emotion
+        : "";
+  }
+
+  if (category) {
+    category.textContent =
+      dream.category
+        ? "Category: " + dream.category
+        : "";
+  }
+
+  showPage("dream-details");
+}
 
   list.innerHTML = "";
 
@@ -1180,6 +1283,14 @@ function renderPublicDreams(dreams) {
 
     item.className = "dream-item";
 
+    const fullDream =
+      escapeHTML(dream.dream_text);
+
+    const preview =
+      fullDream.length > 180
+        ? fullDream.substring(0, 180) + "..."
+        : fullDream;
+
     item.innerHTML = `
       <h3>🌙 ${escapeHTML(dream.title)}</h3>
 
@@ -1189,7 +1300,7 @@ function renderPublicDreams(dreams) {
       </p>
 
       <p>
-        ${escapeHTML(dream.dream_text)}
+        ${preview}
       </p>
 
       <p>
@@ -1201,6 +1312,14 @@ function renderPublicDreams(dreams) {
           ? " · " + escapeHTML(dream.category)
           : ""}
       </p>
+
+      <button
+        class="save-button"
+        onclick="viewDream('${dream.id}')">
+        📖 Read Full Dream
+      </button>
+
+      <br><br>
 
       <small>
         🌍 Shared anonymously
