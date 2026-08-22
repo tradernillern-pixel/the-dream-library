@@ -3,231 +3,289 @@
 
 <head>
 
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0">
 
-  <title>The Dream Library 🌙</title>
+<title>The Dream Library 🌙</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <style>
+<style>
 
-    * {
-      box-sizing: border-box;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    body {
-      margin: 0;
-      font-family: Georgia, serif;
-      background: #071426;
-      color: #eef5ff;
-      line-height: 1.6;
-    }
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #071426;
+  color: #eef5ff;
+  line-height: 1.6;
+}
 
-    header {
-      padding: 25px 20px;
-      text-align: center;
-      background: #0b1d36;
-      border-bottom: 1px solid #20395d;
-    }
+header {
+  text-align: center;
+  padding: 28px 18px;
+  background: #0b1d36;
+  border-bottom: 1px solid #20395d;
+}
 
-    header h1 {
-      margin: 0;
-      font-size: 30px;
-    }
+header h1 {
+  margin: 0;
+  font-size: 30px;
+}
 
-    header p {
-      margin: 5px 0 0;
-      opacity: 0.75;
-    }
+header p {
+  margin: 6px 0 0;
+  opacity: .75;
+}
 
-    nav {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 15px;
-      background: #091a30;
-    }
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  background: #091a30;
+}
 
-    nav button {
-      border: 1px solid #35577f;
-      background: #102845;
-      color: white;
-      padding: 10px 15px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
+nav button {
+  background: #102845;
+  color: white;
+  border: 1px solid #35577f;
+  border-radius: 8px;
+  padding: 10px 13px;
+  cursor: pointer;
+}
 
-    nav button:hover {
-      background: #18385e;
-    }
+.page {
+  display: none;
+  max-width: 900px;
+  margin: auto;
+  padding: 28px 16px 60px;
+}
 
-    .page {
-      display: none;
-      max-width: 850px;
-      margin: auto;
-      padding: 30px 18px 60px;
-    }
+.page.active {
+  display: block;
+}
 
-    .page.active {
-      display: block;
-    }
+h2 {
+  text-align: center;
+  font-size: 28px;
+}
 
-    h2 {
-      text-align: center;
-      font-size: 28px;
-    }
+.tagline {
+  text-align: center;
+  opacity: .75;
+}
 
-    .tagline {
-      text-align: center;
-      opacity: 0.75;
-    }
+.card {
+  background: #0d213d;
+  border: 1px solid #203d62;
+  border-radius: 14px;
+  padding: 20px;
+  margin-top: 18px;
+}
 
-    .card {
-      background: #0d213d;
-      border: 1px solid #203d62;
-      border-radius: 14px;
-      padding: 22px;
-      margin-top: 20px;
-    }
+label {
+  display: block;
+  margin: 16px 0 7px;
+  font-weight: bold;
+}
 
-    label {
-      display: block;
-      margin-top: 18px;
-      margin-bottom: 7px;
-      font-weight: bold;
-    }
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #385b82;
+  background: #071426;
+  color: white;
+  font-size: 16px;
+}
 
-    input,
-    textarea,
-    select {
-      width: 100%;
-      padding: 13px;
-      border-radius: 8px;
-      border: 1px solid #385b82;
-      background: #071426;
-      color: white;
-      font-size: 16px;
-    }
+textarea {
+  min-height: 180px;
+  resize: vertical;
+}
 
-    textarea {
-      min-height: 180px;
-      resize: vertical;
-    }
+button {
+  font-family: inherit;
+}
 
-    .choice-group {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-top: 10px;
-    }
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 18px;
+}
 
-    .choice {
-      padding: 12px;
-      border: 1px solid #385b82;
-      border-radius: 8px;
-      cursor: pointer;
-      text-align: center;
-      background: #091a30;
-    }
+.save-button,
+.outline-button,
+.danger-button {
+  padding: 11px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
 
-    .choice.selected {
-      background: #214d7d;
-      border-color: #7eb5ed;
-    }
+.save-button {
+  background: #1c5d9f;
+  color: white;
+  border: 1px solid #4d8dca;
+}
 
-    .privacy {
-      margin-top: 20px;
-      padding: 16px;
-      border-radius: 10px;
-      background: #102845;
-      border: 1px solid #2b4d73;
-    }
+.outline-button {
+  background: transparent;
+  color: white;
+  border: 1px solid #50759d;
+}
 
-    .button-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-    }
+.danger-button {
+  background: #652a36;
+  color: white;
+  border: 1px solid #9b5260;
+}
 
-    button.save-button,
-    button.outline-button {
-      padding: 12px 18px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 15px;
-    }
+.choice-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+}
 
-    .save-button {
-      background: #1c5d9f;
-      color: white;
-      border: 1px solid #4d8dca;
-    }
+.choice {
+  padding: 11px;
+  text-align: center;
+  background: #091a30;
+  border: 1px solid #385b82;
+  border-radius: 8px;
+  cursor: pointer;
+}
 
-    .outline-button {
-      background: transparent;
-      color: white;
-      border: 1px solid #50759d;
-    }
+.choice.selected {
+  background: #214d7d;
+  border-color: #7eb5ed;
+}
 
-    .save-button:hover,
-    .outline-button:hover {
-      opacity: 0.85;
-    }
+.dream-item {
+  background: #102845;
+  border: 1px solid #294b72;
+  border-radius: 12px;
+  padding: 17px;
+  margin-bottom: 15px;
+}
 
-    .dream-item {
-      background: #102845;
-      border: 1px solid #294b72;
-      border-radius: 12px;
-      padding: 18px;
-      margin-bottom: 16px;
-    }
+.dream-item h3 {
+  margin-top: 0;
+}
 
-    .dream-item h3 {
-      margin-top: 0;
-    }
+.meta {
+  opacity: .72;
+  font-size: 14px;
+}
 
-    .dream-meta {
-      opacity: 0.75;
-      font-size: 14px;
-    }
+.reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
 
-    hr {
-      border: 0;
-      border-top: 1px solid #345170;
-      margin: 20px 0;
-    }
+.reaction-button {
+  background: #091a30;
+  color: white;
+  border: 1px solid #385b82;
+  border-radius: 20px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
 
-    .empty-message {
-      text-align: center;
-      opacity: 0.7;
-      padding: 25px;
-    }
+.reaction-button.selected {
+  background: #214d7d;
+  border-color: #8bc4ff;
+}
 
-    footer {
-      text-align: center;
-      padding: 25px;
-      opacity: 0.6;
-    }
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 15px;
+}
 
-    @media (max-width: 600px) {
+.stat {
+  background: #091a30;
+  border: 1px solid #294b72;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+}
 
-      .choice-group {
-        grid-template-columns: 1fr;
-      }
+.stat strong {
+  display: block;
+  font-size: 26px;
+}
 
-      nav button {
-        width: 100%;
-      }
+.profile-header {
+  text-align: center;
+  padding: 15px;
+}
 
-    }
+.avatar {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  background: #18385e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  font-size: 34px;
+}
 
-  </style>
+.big-number {
+  font-size: 30px;
+  font-weight: bold;
+}
+
+.empty {
+  text-align: center;
+  opacity: .7;
+  padding: 20px;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #345170;
+  margin: 20px 0;
+}
+
+footer {
+  text-align: center;
+  padding: 25px;
+  opacity: .6;
+}
+
+@media (max-width: 600px) {
+
+  nav button {
+    width: 100%;
+  }
+
+  .choice-group {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+}
+
+</style>
 
 </head>
 
@@ -237,1796 +295,2766 @@
 
 <header>
 
-  <h1>🌙 The Dream Library</h1>
+<h1>🌙 The Dream Library</h1>
 
-  <p>
-    Your dream deserves to be remembered.
-  </p>
+<p>
+Dreams remembered. Stories preserved.
+</p>
 
 </header>
 
 
 <nav>
 
-  <button onclick="showPage('home')">
-    🏠 Home
-  </button>
+<button onclick="showPage('home')">
+🏠 Home
+</button>
 
-  <button onclick="showPage('recorder')">
-    ✍️ Record Dream
-  </button>
+<button onclick="showPage('recorder')">
+✍️ Record
+</button>
 
-  <button onclick="showPage('my-dreams')">
-    🌙 My Dreams
-  </button>
+<button onclick="showPage('my-dreams')">
+🌙 My Dreams
+</button>
 
-  <button onclick="showPage('library')">
-    📖 Explore Dreams
-  </button>
+<button onclick="showPage('library')">
+🌎 Explore
+</button>
 
-  <button onclick="showPage('auth')">
-    🔐 Account
-  </button>
+<button onclick="showPage('favorites')">
+🔖 Saved
+</button>
+
+<button onclick="showPage('profile')">
+👤 Profile
+</button>
+
+<button onclick="showPage('statistics')">
+📊 Statistics
+</button>
+
+<button onclick="showPage('auth')">
+🔐 Account
+</button>
 
 </nav>
 
 
-<!-- ============================= -->
 <!-- HOME -->
-<!-- ============================= -->
 
 <section id="home" class="page active">
 
-  <h2>Welcome to The Dream Library</h2>
+<h2>Welcome to The Dream Library</h2>
 
-  <p class="tagline">
-    A place where dreams are remembered,
-    preserved and shared.
-  </p>
+<p class="tagline">
+A worldwide home for human dreams.
+</p>
 
-  <div class="card">
+<div class="card">
 
-    <h3>🌙 Your dreams matter.</h3>
+<h3>🌙 Every dream tells a story.</h3>
 
-    <p>
-      Record the dreams you remember,
-      keep them safely connected to your account,
-      and decide whether they remain private
-      or become part of the anonymous Dream Library.
-    </p>
+<p>
+Record your dreams, keep your private memories
+safe, or anonymously contribute them to a growing
+collection of dreams from around the world.
+</p>
 
-    <div class="button-row">
+<div class="button-row">
 
-      <button
-        class="save-button"
-        onclick="showPage('recorder')">
+<button
+class="save-button"
+onclick="showPage('recorder')">
 
-        ✍️ Record Your Dream
+✍️ Record a Dream
 
-      </button>
+</button>
 
-      <button
-        class="outline-button"
-        onclick="showPage('library')">
+<button
+class="outline-button"
+onclick="showPage('library')">
 
-        📖 Explore Dreams
+🌎 Explore the Library
 
-      </button>
+</button>
 
-    </div>
+</div>
 
-  </div>
+</div>
+
+<div
+id="worldStatsHome"
+class="card">
+
+<p class="empty">
+Loading worldwide library...
+</p>
+
+</div>
 
 </section>
 
 
-<!-- ============================= -->
 <!-- AUTH -->
-<!-- ============================= -->
 
 <section id="auth" class="page">
 
-  <h2>🔐 Your Account</h2>
+<h2>🔐 Account</h2>
 
-  <p class="tagline">
-    Sign in to save and manage your dreams.
-  </p>
+<p class="tagline">
+Sign in to save and manage your dreams.
+</p>
 
-  <div class="card">
+<div class="card">
 
-    <label for="authEmail">
-      Email
-    </label>
+<label>Email</label>
 
-    <input
-      type="email"
-      id="authEmail"
-      placeholder="you@example.com">
+<input
+type="email"
+id="authEmail"
+placeholder="you@example.com">
 
+<label>Password</label>
 
-    <label for="authPassword">
-      Password
-    </label>
+<input
+type="password"
+id="authPassword"
+placeholder="Your password">
 
-    <input
-      type="password"
-      id="authPassword"
-      placeholder="At least 6 characters">
+<div class="button-row">
 
+<button
+class="save-button"
+onclick="signUp()">
 
-    <div class="button-row">
+Create Account
 
-      <button
-        class="save-button"
-        onclick="signUp()">
+</button>
 
-        Create Account
+<button
+class="outline-button"
+onclick="signIn()">
 
-      </button>
+Sign In
 
-      <button
-        class="outline-button"
-        onclick="signIn()">
+</button>
 
-        Sign In
+<button
+class="danger-button"
+onclick="signOut()">
 
-      </button>
+Sign Out
 
-    </div>
+</button>
 
-  </div>
+</div>
+
+<p id="authStatus"></p>
+
+</div>
 
 </section>
 
 
-<!-- ============================= -->
 <!-- RECORDER -->
-<!-- ============================= -->
 
 <section id="recorder" class="page">
 
-  <h2>Record Your Dream</h2>
+<h2>✍️ Record Your Dream</h2>
 
-  <p class="tagline">
-    Your dream deserves to be remembered.
-  </p>
+<div class="card">
 
-  <div class="card">
+<label>Pseudonym</label>
 
-    <label for="pseudonym">
-      Your Pseudonym
-    </label>
+<input
+id="pseudonym"
+placeholder="Example: OceanWalker">
 
-    <input
-      type="text"
-      id="pseudonym"
-      placeholder="Example: MoonWalker">
+<label>Dream Title</label>
 
+<input
+id="dreamTitle"
+placeholder="Give your dream a title">
 
-    <label for="dreamTitle">
-      Dream Title
-    </label>
+<label>Dream</label>
 
-    <input
-      type="text"
-      id="dreamTitle"
-      placeholder="Give your dream a title">
+<textarea
+id="dreamText"
+placeholder="Write everything you remember..."></textarea>
 
+<label>Emotion</label>
 
-    <label for="dreamText">
-      Tell Us Your Dream
-    </label>
+<div class="choice-group">
 
-    <textarea
-      id="dreamText"
-      placeholder="Write everything you remember..."></textarea>
+<div class="choice"
+onclick="selectChoice(this)">
+😊 Happy
+</div>
 
+<div class="choice"
+onclick="selectChoice(this)">
+😨 Afraid
+</div>
 
-    <label>
-      How did the dream make you feel?
-    </label>
+<div class="choice"
+onclick="selectChoice(this)">
+😌 Peaceful
+</div>
 
-    <div class="choice-group">
+<div class="choice"
+onclick="selectChoice(this)">
+😢 Sad
+</div>
 
-      <div
-        class="choice"
-        onclick="selectChoice(this)">
-        😊 Happy
-      </div>
+<div class="choice"
+onclick="selectChoice(this)">
+😮 Amazed
+</div>
 
-      <div
-        class="choice"
-        onclick="selectChoice(this)">
-        😨 Afraid
-      </div>
+<div class="choice"
+onclick="selectChoice(this)">
+😕 Confused
+</div>
 
-      <div
-        class="choice"
-        onclick="selectChoice(this)">
-        😌 Peaceful
-      </div>
+</div>
 
-      <div
-        class="choice"
-        onclick="selectChoice(this)">
-        😢 Sad
-      </div>
+<label>Category</label>
 
-      <div
-        class="choice"
-        onclick="selectChoice(this)">
-        😮 Amazed
-      </div>
+<select id="category">
 
-      <div
-        class="choice"
-        onclick="selectChoice(this)">
-        😕 Confused
-      </div>
+<option value="">Select category</option>
+<option>Adventure</option>
+<option>Family</option>
+<option>Love</option>
+<option>Fear</option>
+<option>Spiritual</option>
+<option>Nature</option>
+<option>Animals</option>
+<option>Other</option>
 
-    </div>
+</select>
 
+<label>Visibility</label>
 
-    <label for="category">
-      Dream Category
-    </label>
+<select id="visibility">
 
-    <select id="category">
+<option value="private">
+🔒 Private — Only Me
+</option>
 
-      <option value="">
-        Select a category
-      </option>
+<option value="public">
+🌍 Public — Share Anonymously
+</option>
 
-      <option value="Adventure">
-        Adventure
-      </option>
+</select>
 
-      <option value="Family">
-        Family
-      </option>
+<div class="card">
 
-      <option value="Love">
-        Love
-      </option>
+<strong>🔐 Privacy</strong>
 
-      <option value="Fear">
-        Fear
-      </option>
+<p>
+Private dreams stay connected to your account.
+Public dreams may appear anonymously in the
+Worldwide Dream Library.
+</p>
 
-      <option value="Spiritual">
-        Spiritual
-      </option>
+</div>
 
-      <option value="Nature">
-        Nature
-      </option>
+<button
+class="save-button"
+onclick="saveDream()">
 
-      <option value="Animals">
-        Animals
-      </option>
+💾 Save Dream
 
-      <option value="Other">
-        Other
-      </option>
+</button>
 
-    </select>
-
-
-    <label for="visibility">
-      Dream Visibility
-    </label>
-
-    <select id="visibility">
-
-      <option value="private">
-        🔒 Private — Only Me
-      </option>
-
-      <option value="public">
-        🌍 Public — Share Anonymously
-      </option>
-
-    </select>
-
-
-    <div class="privacy">
-
-      <strong>
-        🔒 Privacy first
-      </strong>
-
-      <br><br>
-
-      Private dreams are only available
-      to your account.
-
-      <br><br>
-
-      Public dreams may appear anonymously
-      in the worldwide Dream Library.
-
-    </div>
-
-
-    <button
-      class="save-button"
-      onclick="saveDream()">
-
-      💾 Save Dream
-
-    </button>
-
-  </div>
+</div>
 
 </section>
 
 
-<!-- ============================= -->
 <!-- MY DREAMS -->
-<!-- ============================= -->
 
 <section id="my-dreams" class="page">
 
-  <h2>🌙 My Dreams</h2>
+<h2>🌙 My Dreams</h2>
 
-  <p class="tagline">
-    Your personal collection of remembered dreams.
-  </p>
+<div
+id="myDreamsList"
+class="card">
 
-  <div
-    id="myDreamsList"
-    class="card">
+<p class="empty">
+Loading your dreams...
+</p>
 
-    <p class="empty-message">
-      Loading your dreams...
-    </p>
-
-  </div>
+</div>
 
 </section>
 
 
-<!-- ============================= -->
-<!-- EXPLORE DREAMS -->
-<!-- ============================= -->
+<!-- EXPLORE -->
 
 <section id="library" class="page">
 
-  <h2>📖 Explore Dreams</h2>
+<h2>🌎 Worldwide Dream Library</h2>
 
-  <p class="tagline">
-    A future collection of dreams from humanity.
-  </p>
+<p class="tagline">
+Anonymous dreams contributed by dreamers.
+</p>
 
+<div class="card">
 
-  <!-- SEARCH AND FILTERS -->
+<label>🔎 Search</label>
 
-  <div class="card">
+<input
+id="dreamSearch"
+placeholder="Search dreams..."
+oninput="filterPublicDreams()">
 
-    <label for="dreamSearch">
-      🔎 Search Dreams
-    </label>
+<label>🏷️ Category</label>
 
-    <input
-      type="text"
-      id="dreamSearch"
-      placeholder="Search by title or dream..."
-      oninput="filterPublicDreams()">
+<select
+id="dreamCategoryFilter"
+onchange="filterPublicDreams()">
 
+<option value="">All Categories</option>
+<option>Adventure</option>
+<option>Family</option>
+<option>Love</option>
+<option>Fear</option>
+<option>Spiritual</option>
+<option>Nature</option>
+<option>Animals</option>
+<option>Other</option>
 
-    <label for="dreamCategoryFilter">
-      🏷️ Category
-    </label>
+</select>
 
-    <select
-      id="dreamCategoryFilter"
-      onchange="filterPublicDreams()">
+<label>😊 Emotion</label>
 
-      <option value="">
-        All Categories
-      </option>
+<select
+id="dreamEmotionFilter"
+onchange="filterPublicDreams()">
 
-      <option value="Adventure">
-        Adventure
-      </option>
+<option value="">All Emotions</option>
+<option>😊 Happy</option>
+<option>😨 Afraid</option>
+<option>😌 Peaceful</option>
+<option>😢 Sad</option>
+<option>😮 Amazed</option>
+<option>😕 Confused</option>
 
-      <option value="Family">
-        Family
-      </option>
+</select>
 
-      <option value="Love">
-        Love
-      </option>
+</div>
 
-      <option value="Fear">
-        Fear
-      </option>
+<div
+id="publicDreamsList"
+class="card">
 
-      <option value="Spiritual">
-        Spiritual
-      </option>
+<p class="empty">
+🔄 Loading public dreams...
+</p>
 
-      <option value="Nature">
-        Nature
-      </option>
-
-      <option value="Animals">
-        Animals
-      </option>
-
-      <option value="Other">
-        Other
-      </option>
-
-    </select>
-
-
-    <label for="dreamEmotionFilter">
-      😊 Emotion
-    </label>
-
-    <select
-      id="dreamEmotionFilter"
-      onchange="filterPublicDreams()">
-
-      <option value="">
-        All Emotions
-      </option>
-
-      <option value="😊 Happy">
-        😊 Happy
-      </option>
-
-      <option value="😨 Afraid">
-        😨 Afraid
-      </option>
-
-      <option value="😌 Peaceful">
-        😌 Peaceful
-      </option>
-
-      <option value="😢 Sad">
-        😢 Sad
-      </option>
-
-      <option value="😮 Amazed">
-        😮 Amazed
-      </option>
-
-      <option value="😕 Confused">
-        😕 Confused
-      </option>
-
-    </select>
-
-  </div>
-
-
-  <!-- PUBLIC DREAMS -->
-
-  <div
-    id="publicDreamsList"
-    class="card">
-
-    <p class="empty-message">
-      🔄 Loading public dreams...
-    </p>
-
-  </div>
+</div>
 
 </section>
 
 
-<!-- ============================= -->
-<!-- DREAM DETAILS -->
-<!-- ============================= -->
+<!-- FULL DREAM -->
 
 <section
-  id="dream-details"
-  class="page">
+id="dream-details"
+class="page">
 
-  <h2 id="dreamDetailTitle">
-    🌙 Dream
-  </h2>
+<h2 id="dreamDetailTitle">
+🌙 Dream
+</h2>
 
-  <p
-    id="dreamDetailAuthor"
-    class="tagline">
-  </p>
+<p
+id="dreamDetailAuthor"
+class="tagline">
+</p>
 
-  <div class="card">
+<div class="card">
 
-    <p id="dreamDetailEmotion"></p>
+<p id="dreamDetailEmotion"></p>
 
-    <p id="dreamDetailCategory"></p>
+<p id="dreamDetailCategory"></p>
 
-    <hr>
+<hr>
 
-    <p
-      id="dreamDetailContent"
-      style="white-space: pre-wrap;">
-    </p>
+<p
+id="dreamDetailContent"
+style="white-space:pre-wrap;">
+</p>
 
-    <br>
+<hr>
 
-    <button
-      class="outline-button"
-      onclick="showPage('library')">
+<div
+id="detailReactions"
+class="reactions">
+</div>
 
-      ← Back to Explore Dreams
+<div class="button-row">
 
-    </button>
+<button
+id="detailFavoriteButton"
+class="outline-button">
 
-  </div>
+🔖 Save Dream
+
+</button>
+
+<button
+class="outline-button"
+onclick="showPage('library')">
+
+← Back
+
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- FAVORITES -->
+
+<section id="favorites" class="page">
+
+<h2>🔖 Saved Dreams</h2>
+
+<p class="tagline">
+Your private collection of public dreams.
+</p>
+
+<div
+id="favoritesList"
+class="card">
+
+<p class="empty">
+Loading saved dreams...
+</p>
+
+</div>
+
+</section>
+
+
+<!-- PROFILE -->
+
+<section id="profile" class="page">
+
+<h2>👤 Dreamer Profile</h2>
+
+<div class="card profile-header">
+
+<div class="avatar">
+🌙
+</div>
+
+<h3 id="profileName">
+Anonymous Dreamer
+</h3>
+
+<p id="profileBio">
+No bio yet.
+</p>
+
+<div class="stat-grid">
+
+<div class="stat">
+
+<strong id="profileDreamCount">
+0
+</strong>
+
+Public Dreams
+
+</div>
+
+<div class="stat">
+
+<strong id="profileReactionCount">
+0
+</strong>
+
+Reactions
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>Edit Your Profile</h3>
+
+<label>Display Name</label>
+
+<input
+id="profileDisplayName"
+placeholder="Your dreamer name">
+
+<label>Bio</label>
+
+<textarea
+id="profileBioInput"
+placeholder="Tell the Dream Library something about you..."></textarea>
+
+<button
+class="save-button"
+onclick="saveProfile()">
+
+💾 Save Profile
+
+</button>
+
+</div>
+
+
+<div
+id="profileDreams"
+class="card">
+
+<h3>🌙 Your Public Dreams</h3>
+
+<p class="empty">
+Loading...
+</p>
+
+</div>
+
+</section>
+
+
+<!-- STATISTICS -->
+
+<section id="statistics" class="page">
+
+<h2>📊 Dream Statistics</h2>
+
+<p class="tagline">
+Your journey through the world of dreams.
+</p>
+
+<div
+id="personalStats"
+class="card">
+
+<p class="empty">
+Loading statistics...
+</p>
+
+</div>
+
+<div
+id="worldStatistics"
+class="card">
+
+<h3>🌎 Worldwide Library</h3>
+
+<p class="empty">
+Loading...
+</p>
+
+</div>
 
 </section>
 
 
 <footer>
 
-  🌙 The Dream Library
+🌙 The Dream Library
 
-  <br>
+<br>
 
-  Dreams remembered. Stories preserved.
+Dreams remembered. Stories preserved.
 
 </footer>
 
 
 <script>
 
-/* ==========================================
+
+/* ==================================================
    SUPABASE
-   ========================================== */
-
-/*
- IMPORTANT:
-
- Keep your EXISTING Supabase URL and anon key
- from your current index.html.
-
- Replace only the two values below.
-*/
+   ================================================== */
 
 const SUPABASE_URL =
-  "https://oftwyqrblzncwirihjje.supabase.co";
+"https://oftwyqrblzncwirihjje.supabase.co";
 
 const SUPABASE_ANON_KEY =
-  "sb_publishable_Hey4zEst-TD0P8Yx2tsL8g_5i4ae1ec";
+"sb_publishable_Hey4zEst-TD0P8Yx2tsL8g_5i4ae1ec";
 
 
 const supabaseClient =
-  window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_ANON_KEY
+);
 
 
-/* ==========================================
+/* ==================================================
+   GLOBAL DATA
+   ================================================== */
+
+let publicDreams = [];
+
+let currentDreamId = null;
+
+let editingDreamId = null;
+
+
+/* ==================================================
    PAGE NAVIGATION
-   ========================================== */
+   ================================================== */
 
 function showPage(pageId) {
 
-  const pages =
-    document.querySelectorAll(".page");
+document
+.querySelectorAll(".page")
+.forEach(function(page) {
 
-  pages.forEach(function(page) {
+page.classList.remove("active");
 
-    page.classList.remove("active");
-
-  });
-
-
-  const selectedPage =
-    document.getElementById(pageId);
-
-  if (selectedPage) {
-
-    selectedPage.classList.add("active");
-
-  }
+});
 
 
-  window.scrollTo(0, 0);
+const page =
+document.getElementById(pageId);
 
+if (page) {
 
-  if (pageId === "my-dreams") {
-
-    loadMyDreams();
-
-  }
-
-
-  if (pageId === "library") {
-
-    loadPublicDreams();
-
-  }
+page.classList.add("active");
 
 }
 
 
-/* ==========================================
-   AUTHENTICATION
-   ========================================== */
+window.scrollTo(0,0);
+
+
+if (pageId === "my-dreams") {
+loadMyDreams();
+}
+
+if (pageId === "library") {
+loadPublicDreams();
+}
+
+if (pageId === "favorites") {
+loadFavorites();
+}
+
+if (pageId === "profile") {
+loadProfile();
+}
+
+if (pageId === "statistics") {
+loadStatistics();
+}
+
+}
+
+
+/* ==================================================
+   ESCAPE HTML
+   ================================================== */
+
+function escapeHTML(text) {
+
+const div =
+document.createElement("div");
+
+div.textContent =
+text || "";
+
+return div.innerHTML;
+
+}
+
+
+/* ==================================================
+   AUTH
+   ================================================== */
 
 async function signUp() {
 
-  const email =
-    document.getElementById("authEmail").value.trim();
+const email =
+document
+.getElementById("authEmail")
+.value
+.trim();
 
-  const password =
-    document.getElementById("authPassword").value;
-
-
-  if (!email || !password) {
-
-    alert(
-      "Please enter your email and password."
-    );
-
-    return;
-
-  }
+const password =
+document
+.getElementById("authPassword")
+.value;
 
 
-  if (password.length < 6) {
+if (!email || !password) {
 
-    alert(
-      "Your password should contain at least 6 characters."
-    );
+alert(
+"Please enter your email and password."
+);
 
-    return;
+return;
 
-  }
-
-
-  const { error } =
-    await supabaseClient.auth.signUp({
-
-      email: email,
-
-      password: password
-
-    });
+}
 
 
-  if (error) {
+const { error } =
+await supabaseClient.auth.signUp({
 
-    alert(
-      "Sign-up error: " +
-      error.message
-    );
+email: email,
 
-    return;
+password: password
 
-  }
+});
 
 
-  alert(
-    "Account created! Please check your email and confirm your account before signing in. 🌙"
-  );
+if (error) {
+
+alert(
+error.message
+);
+
+return;
+
+}
+
+
+alert(
+"Account created. Check your email if confirmation is required."
+);
 
 }
 
 
 async function signIn() {
 
-  const email =
-    document.getElementById("authEmail").value.trim();
+const email =
+document
+.getElementById("authEmail")
+.value
+.trim();
 
-  const password =
-    document.getElementById("authPassword").value;
-
-
-  if (!email || !password) {
-
-    alert(
-      "Please enter your email and password."
-    );
-
-    return;
-
-  }
+const password =
+document
+.getElementById("authPassword")
+.value;
 
 
-  const { error } =
-    await supabaseClient.auth.signInWithPassword({
+const { error } =
+await supabaseClient.auth.signInWithPassword({
 
-      email: email,
+email,
+password
 
-      password: password
-
-    });
-
-
-  if (error) {
-
-    alert(
-      "Sign-in error: " +
-      error.message
-    );
-
-    return;
-
-  }
+});
 
 
-  alert(
-    "Welcome back to The Dream Library. 🌙"
-  );
+if (error) {
 
+alert(error.message);
 
-  showPage("my-dreams");
+return;
 
 }
 
 
-/* ==========================================
-   SELECT EMOTION
-   ========================================== */
+alert(
+"Welcome back to The Dream Library. 🌙"
+);
+
+showPage("my-dreams");
+
+}
+
+
+async function signOut() {
+
+const { error } =
+await supabaseClient.auth.signOut();
+
+
+if (error) {
+
+alert(error.message);
+
+return;
+
+}
+
+
+alert(
+"You have been signed out."
+);
+
+showPage("home");
+
+}
+
+
+/* ==================================================
+   EMOTION
+   ================================================== */
 
 function selectChoice(element) {
 
-  document
-    .querySelectorAll(".choice")
-    .forEach(function(choice) {
+document
+.querySelectorAll(".choice")
+.forEach(function(choice) {
 
-      choice.classList.remove("selected");
+choice.classList.remove("selected");
 
-    });
+});
 
-
-  element.classList.add("selected");
-
-}
-
-
-/* ==========================================
-   SAFELY DISPLAY USER CONTENT
-   ========================================== */
-
-function escapeHTML(text) {
-
-  const div =
-    document.createElement("div");
-
-  div.textContent =
-    text || "";
-
-  return div.innerHTML;
+element.classList.add("selected");
 
 }
 
 
-/* ==========================================
-   SAVE OR UPDATE DREAM
-   ========================================== */
+/* ==================================================
+   SAVE DREAM
+   ================================================== */
 
 async function saveDream() {
 
-  const { data: userData, error: userError } =
-    await supabaseClient.auth.getUser();
+const { data: userData } =
+await supabaseClient.auth.getUser();
 
 
-  if (userError || !userData.user) {
+if (!userData.user) {
 
-    alert(
-      "Please sign in before saving your dream. 🔐"
-    );
+alert(
+"Please sign in first. 🔐"
+);
 
-    showPage("auth");
+showPage("auth");
 
-    return;
-
-  }
-
-
-  const user =
-    userData.user;
-
-
-  const pseudonym =
-    document
-      .getElementById("pseudonym")
-      .value
-      .trim();
-
-
-  const title =
-    document
-      .getElementById("dreamTitle")
-      .value
-      .trim();
-
-
-  const dream =
-    document
-      .getElementById("dreamText")
-      .value
-      .trim();
-
-
-  const category =
-    document
-      .getElementById("category")
-      .value;
-
-
-  const visibility =
-    document
-      .getElementById("visibility")
-      .value;
-
-
-  const selectedEmotion =
-    document
-      .querySelector(".choice.selected");
-
-
-  const emotion =
-    selectedEmotion
-      ? selectedEmotion.textContent.trim()
-      : "";
-
-
-  if (!pseudonym || !title || !dream) {
-
-    alert(
-      "Please complete your pseudonym, dream title and dream."
-    );
-
-    return;
-
-  }
-
-
-  /* UPDATE */
-
-  if (window.editingDreamId) {
-
-    const { error } =
-      await supabaseClient
-        .from("dreams")
-        .update({
-
-          pseudonym: pseudonym,
-
-          title: title,
-
-          dream_text: dream,
-
-          emotion: emotion,
-
-          category: category,
-
-          visibility: visibility
-
-        })
-        .eq(
-          "id",
-          window.editingDreamId
-        )
-        .eq(
-          "user_id",
-          user.id
-        );
-
-
-    if (error) {
-
-      console.error(error);
-
-      alert(
-        "Your dream could not be updated: " +
-        error.message
-      );
-
-      return;
-
-    }
-
-
-    alert(
-      "🌙 Your dream has been updated."
-    );
-
-
-    window.editingDreamId = null;
-
-
-    clearDreamForm();
-
-    showPage("my-dreams");
-
-    return;
-
-  }
-
-
-  /* CREATE */
-
-  const { error } =
-    await supabaseClient
-      .from("dreams")
-      .insert({
-
-        user_id: user.id,
-
-        pseudonym: pseudonym,
-
-        title: title,
-
-        dream_text: dream,
-
-        emotion: emotion,
-
-        category: category,
-
-        visibility: visibility
-
-      });
-
-
-  if (error) {
-
-    console.error(error);
-
-    alert(
-      "Your dream could not be saved: " +
-      error.message
-    );
-
-    return;
-
-  }
-
-
-  alert(
-    "🌙 Your dream has been safely recorded."
-  );
-
-
-  clearDreamForm();
-
-  showPage("my-dreams");
+return;
 
 }
 
 
-/* ==========================================
-   CLEAR DREAM FORM
-   ========================================== */
+const pseudonym =
+document.getElementById("pseudonym")
+.value.trim();
+
+const title =
+document.getElementById("dreamTitle")
+.value.trim();
+
+const dreamText =
+document.getElementById("dreamText")
+.value.trim();
+
+const category =
+document.getElementById("category")
+.value;
+
+const visibility =
+document.getElementById("visibility")
+.value;
+
+const selected =
+document.querySelector(
+".choice.selected"
+);
+
+const emotion =
+selected
+? selected.textContent.trim()
+: "";
+
+
+if (!pseudonym || !title || !dreamText) {
+
+alert(
+"Please complete your pseudonym, title and dream."
+);
+
+return;
+
+}
+
+
+if (editingDreamId) {
+
+const { error } =
+await supabaseClient
+.from("dreams")
+.update({
+
+pseudonym,
+title,
+dream_text: dreamText,
+emotion,
+category,
+visibility
+
+})
+.eq(
+"id",
+editingDreamId
+)
+.eq(
+"user_id",
+userData.user.id
+);
+
+
+if (error) {
+
+alert(error.message);
+
+return;
+
+}
+
+
+alert(
+"🌙 Dream updated successfully."
+);
+
+
+editingDreamId = null;
+
+clearDreamForm();
+
+showPage("my-dreams");
+
+return;
+
+}
+
+
+const { error } =
+await supabaseClient
+.from("dreams")
+.insert({
+
+user_id:
+userData.user.id,
+
+pseudonym,
+title,
+dream_text: dreamText,
+emotion,
+category,
+visibility
+
+});
+
+
+if (error) {
+
+alert(error.message);
+
+return;
+
+}
+
+
+alert(
+"🌙 Dream saved successfully."
+);
+
+clearDreamForm();
+
+showPage("my-dreams");
+
+}
+
+
+/* ==================================================
+   CLEAR FORM
+   ================================================== */
 
 function clearDreamForm() {
 
-  document
-    .getElementById("pseudonym")
-    .value = "";
+document.getElementById("pseudonym").value = "";
 
-  document
-    .getElementById("dreamTitle")
-    .value = "";
+document.getElementById("dreamTitle").value = "";
 
-  document
-    .getElementById("dreamText")
-    .value = "";
+document.getElementById("dreamText").value = "";
 
-  document
-    .getElementById("category")
-    .value = "";
+document.getElementById("category").value = "";
 
-  document
-    .getElementById("visibility")
-    .value = "private";
+document.getElementById("visibility").value = "private";
 
+document
+.querySelectorAll(".choice")
+.forEach(function(choice) {
 
-  document
-    .querySelectorAll(".choice")
-    .forEach(function(choice) {
+choice.classList.remove("selected");
 
-      choice.classList.remove("selected");
-
-    });
+});
 
 }
 
 
-/* ==========================================
-   LOAD MY DREAMS
-   ========================================== */
+/* ==================================================
+   MY DREAMS
+   ================================================== */
 
 async function loadMyDreams() {
 
-  const list =
-    document.getElementById(
-      "myDreamsList"
-    );
+const list =
+document.getElementById(
+"myDreamsList"
+);
+
+if (!list) return;
 
 
-  if (!list) return;
+const { data: userData } =
+await supabaseClient.auth.getUser();
 
 
-  const { data: userData, error: userError } =
-    await supabaseClient.auth.getUser();
+if (!userData.user) {
 
+list.innerHTML =
+"<p class='empty'>🔐 Please sign in.</p>";
 
-  if (userError || !userData.user) {
-
-    list.innerHTML =
-      "<p class='empty-message'>🔐 Please sign in to see your dreams.</p>";
-
-    return;
-
-  }
-
-
-  const { data: dreams, error } =
-    await supabaseClient
-      .from("dreams")
-      .select("*")
-      .eq(
-        "user_id",
-        userData.user.id
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      );
-
-
-  if (error) {
-
-    console.error(error);
-
-    list.innerHTML =
-      "<p class='empty-message'>Unable to load your dreams.</p>";
-
-    return;
-
-  }
-
-
-  if (!dreams || dreams.length === 0) {
-
-    list.innerHTML =
-      "<p class='empty-message'>🌙 You haven't recorded any dreams yet.</p>";
-
-    return;
-
-  }
-
-
-  list.innerHTML = "";
-
-
-  dreams.forEach(function(dream) {
-
-    const item =
-      document.createElement("div");
-
-
-    item.className =
-      "dream-item";
-
-
-    item.innerHTML = `
-
-      <h3>
-        🌙 ${escapeHTML(dream.title)}
-      </h3>
-
-      <p>
-        <strong>
-          ${escapeHTML(dream.pseudonym)}
-        </strong>
-      </p>
-
-      <p>
-        ${escapeHTML(dream.dream_text)}
-      </p>
-
-      <p class="dream-meta">
-
-        ${
-          dream.emotion
-            ? "Feeling: " +
-              escapeHTML(dream.emotion)
-            : ""
-        }
-
-        ${
-          dream.category
-            ? " · " +
-              escapeHTML(dream.category)
-            : ""
-        }
-
-      </p>
-
-
-      <small>
-
-        ${
-          dream.visibility === "public"
-            ? "🌍 Public"
-            : "🔒 Private"
-        }
-
-      </small>
-
-
-      <div class="button-row">
-
-        <button
-          class="save-button"
-          onclick="editDream('${dream.id}')">
-
-          ✏️ Edit Dream
-
-        </button>
-
-
-        <button
-          class="outline-button"
-          onclick="deleteDream('${dream.id}')">
-
-          🗑️ Delete Dream
-
-        </button>
-
-      </div>
-
-    `;
-
-
-    list.appendChild(item);
-
-  });
+return;
 
 }
 
 
-/* ==========================================
-   DELETE DREAM
-   ========================================== */
-
-async function deleteDream(dreamId) {
-
-  const confirmed =
-    confirm(
-      "Are you sure you want to delete this dream? This cannot be undone."
-    );
-
-
-  if (!confirmed) {
-
-    return;
-
-  }
+const { data: dreams, error } =
+await supabaseClient
+.from("dreams")
+.select("*")
+.eq(
+"user_id",
+userData.user.id
+)
+.order(
+"created_at",
+{ ascending:false }
+);
 
 
-  const { data: userData, error: userError } =
-    await supabaseClient.auth.getUser();
+if (error) {
 
+list.innerHTML =
+"<p class='empty'>Unable to load dreams.</p>";
 
-  if (userError || !userData.user) {
+console.error(error);
 
-    alert(
-      "Please sign in first. 🔐"
-    );
-
-    showPage("auth");
-
-    return;
-
-  }
-
-
-  const { error } =
-    await supabaseClient
-      .from("dreams")
-      .delete()
-      .eq(
-        "id",
-        dreamId
-      )
-      .eq(
-        "user_id",
-        userData.user.id
-      );
-
-
-  if (error) {
-
-    console.error(error);
-
-    alert(
-      "The dream could not be deleted: " +
-      error.message
-    );
-
-    return;
-
-  }
-
-
-  alert(
-    "🌙 Your dream has been deleted."
-  );
-
-
-  loadMyDreams();
+return;
 
 }
 
 
-/* ==========================================
+if (!dreams.length) {
+
+list.innerHTML =
+"<p class='empty'>🌙 You have no dreams yet.</p>";
+
+return;
+
+}
+
+
+list.innerHTML = "";
+
+
+dreams.forEach(function(dream) {
+
+const item =
+document.createElement("div");
+
+item.className =
+"dream-item";
+
+
+item.innerHTML = `
+
+<h3>
+🌙 ${escapeHTML(dream.title)}
+</h3>
+
+<p>
+<strong>
+${escapeHTML(dream.pseudonym)}
+</strong>
+</p>
+
+<p>
+${escapeHTML(dream.dream_text)}
+</p>
+
+<p class="meta">
+
+${dream.emotion
+? "Feeling: " +
+escapeHTML(dream.emotion)
+: ""}
+
+${dream.category
+? " · " +
+escapeHTML(dream.category)
+: ""}
+
+</p>
+
+<small>
+
+${dream.visibility === "public"
+? "🌍 Public"
+: "🔒 Private"}
+
+</small>
+
+<div class="button-row">
+
+<button
+class="save-button"
+onclick="editDream('${dream.id}')">
+
+✏️ Edit
+
+</button>
+
+<button
+class="danger-button"
+onclick="deleteDream('${dream.id}')">
+
+🗑️ Delete
+
+</button>
+
+</div>
+
+`;
+
+list.appendChild(item);
+
+});
+
+}
+
+
+/* ==================================================
    EDIT DREAM
-   ========================================== */
+   ================================================== */
 
-async function editDream(dreamId) {
+async function editDream(id) {
 
-  const { data: userData, error: userError } =
-    await supabaseClient.auth.getUser();
-
-
-  if (userError || !userData.user) {
-
-    alert(
-      "Please sign in first. 🔐"
-    );
-
-    showPage("auth");
-
-    return;
-
-  }
+const { data: userData } =
+await supabaseClient.auth.getUser();
 
 
-  const { data: dream, error } =
-    await supabaseClient
-      .from("dreams")
-      .select("*")
-      .eq(
-        "id",
-        dreamId
-      )
-      .eq(
-        "user_id",
-        userData.user.id
-      )
-      .single();
+if (!userData.user) {
 
+showPage("auth");
 
-  if (error || !dream) {
-
-    alert(
-      "We couldn't find that dream."
-    );
-
-    return;
-
-  }
-
-
-  document
-    .getElementById("pseudonym")
-    .value =
-      dream.pseudonym || "";
-
-
-  document
-    .getElementById("dreamTitle")
-    .value =
-      dream.title || "";
-
-
-  document
-    .getElementById("dreamText")
-    .value =
-      dream.dream_text || "";
-
-
-  document
-    .getElementById("category")
-    .value =
-      dream.category || "";
-
-
-  document
-    .getElementById("visibility")
-    .value =
-      dream.visibility || "private";
-
-
-  document
-    .querySelectorAll(".choice")
-    .forEach(function(choice) {
-
-      choice.classList.remove("selected");
-
-
-      if (
-        dream.emotion &&
-        choice.textContent.includes(
-          dream.emotion
-        )
-      ) {
-
-        choice.classList.add(
-          "selected"
-        );
-
-      }
-
-    });
-
-
-  window.editingDreamId =
-    dreamId;
-
-
-  showPage("recorder");
+return;
 
 }
 
 
-/* ==========================================
+const { data: dream, error } =
+await supabaseClient
+.from("dreams")
+.select("*")
+.eq("id",id)
+.eq(
+"user_id",
+userData.user.id
+)
+.single();
+
+
+if (error || !dream) {
+
+alert(
+"We couldn't find that dream."
+);
+
+return;
+
+}
+
+
+document.getElementById("pseudonym").value =
+dream.pseudonym || "";
+
+document.getElementById("dreamTitle").value =
+dream.title || "";
+
+document.getElementById("dreamText").value =
+dream.dream_text || "";
+
+document.getElementById("category").value =
+dream.category || "";
+
+document.getElementById("visibility").value =
+dream.visibility || "private";
+
+
+document
+.querySelectorAll(".choice")
+.forEach(function(choice) {
+
+choice.classList.remove("selected");
+
+if (
+dream.emotion &&
+choice.textContent.includes(
+dream.emotion
+)
+) {
+
+choice.classList.add("selected");
+
+}
+
+});
+
+
+editingDreamId = id;
+
+showPage("recorder");
+
+}
+
+
+/* ==================================================
+   DELETE DREAM
+   ================================================== */
+
+async function deleteDream(id) {
+
+if (
+!confirm(
+"Delete this dream permanently?"
+)
+) return;
+
+
+const { data: userData } =
+await supabaseClient.auth.getUser();
+
+
+if (!userData.user) {
+
+showPage("auth");
+
+return;
+
+}
+
+
+const { error } =
+await supabaseClient
+.from("dreams")
+.delete()
+.eq("id",id)
+.eq(
+"user_id",
+userData.user.id
+);
+
+
+if (error) {
+
+alert(error.message);
+
+return;
+
+}
+
+
+loadMyDreams();
+
+}
+
+
+/* ==================================================
    PUBLIC DREAMS
-   ========================================== */
-
-let publicDreams = [];
-
+   ================================================== */
 
 async function loadPublicDreams() {
 
-  const list =
-    document.getElementById(
-      "publicDreamsList"
-    );
+const list =
+document.getElementById(
+"publicDreamsList"
+);
+
+if (!list) return;
 
 
-  if (!list) return;
+list.innerHTML =
+"<p class='empty'>🔄 Loading public dreams...</p>";
 
 
-  list.innerHTML =
-    "<p class='empty-message'>🔄 Loading public dreams...</p>";
+const { data: dreams, error } =
+await supabaseClient
+.from("dreams")
+.select("*")
+.eq(
+"visibility",
+"public"
+)
+.order(
+"created_at",
+{ ascending:false }
+);
 
 
-  const { data: dreams, error } =
-    await supabaseClient
-      .from("dreams")
-      .select("*")
-      .eq(
-        "visibility",
-        "public"
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      );
+if (error) {
 
+console.error(error);
 
-  if (error) {
+list.innerHTML =
+"<p class='empty'>Unable to load public dreams.</p>";
 
-    console.error(
-      "Public dreams error:",
-      error
-    );
-
-
-    list.innerHTML =
-      "<p class='empty-message'>Unable to load public dreams.</p>";
-
-    return;
-
-  }
-
-
-  publicDreams =
-    dreams || [];
-
-
-  renderPublicDreams(
-    publicDreams
-  );
+return;
 
 }
 
 
-/* ==========================================
-   FILTER PUBLIC DREAMS
-   ========================================== */
+publicDreams =
+dreams || [];
+
+renderPublicDreams(
+publicDreams
+);
+
+}
+
+
+/* ==================================================
+   FILTER
+   ================================================== */
 
 function filterPublicDreams() {
 
-  const searchInput =
-    document.getElementById(
-      "dreamSearch"
-    );
+const search =
+document
+.getElementById("dreamSearch")
+.value
+.toLowerCase()
+.trim();
+
+const category =
+document
+.getElementById("dreamCategoryFilter")
+.value;
+
+const emotion =
+document
+.getElementById("dreamEmotionFilter")
+.value;
 
 
-  const categoryInput =
-    document.getElementById(
-      "dreamCategoryFilter"
-    );
+const filtered =
+publicDreams.filter(
+function(dream) {
+
+const matchesSearch =
+!search ||
+
+(dream.title || "")
+.toLowerCase()
+.includes(search) ||
+
+(dream.dream_text || "")
+.toLowerCase()
+.includes(search);
 
 
-  const emotionInput =
-    document.getElementById(
-      "dreamEmotionFilter"
-    );
+const matchesCategory =
+!category ||
+dream.category === category;
 
 
-  const search =
-    searchInput
-      ? searchInput.value
-          .toLowerCase()
-          .trim()
-      : "";
+const matchesEmotion =
+!emotion ||
+dream.emotion === emotion;
 
 
-  const category =
-    categoryInput
-      ? categoryInput.value
-      : "";
+return (
+matchesSearch &&
+matchesCategory &&
+matchesEmotion
+);
+
+});
 
 
-  const emotion =
-    emotionInput
-      ? emotionInput.value
-      : "";
-
-
-  const filtered =
-    publicDreams.filter(
-      function(dream) {
-
-
-        const matchesSearch =
-          !search ||
-
-          (dream.title || "")
-            .toLowerCase()
-            .includes(search) ||
-
-          (dream.dream_text || "")
-            .toLowerCase()
-            .includes(search);
-
-
-        const matchesCategory =
-          !category ||
-          dream.category === category;
-
-
-        const matchesEmotion =
-          !emotion ||
-          dream.emotion === emotion;
-
-
-        return (
-          matchesSearch &&
-          matchesCategory &&
-          matchesEmotion
-        );
-
-      }
-    );
-
-
-  renderPublicDreams(
-    filtered
-  );
+renderPublicDreams(filtered);
 
 }
 
 
-/* ==========================================
-   DISPLAY PUBLIC DREAMS
-   ========================================== */
+/* ==================================================
+   RENDER PUBLIC DREAMS
+   ================================================== */
 
-function renderPublicDreams(dreams) {
+async function renderPublicDreams(dreams) {
 
-  const list =
-    document.getElementById(
-      "publicDreamsList"
-    );
+const list =
+document.getElementById(
+"publicDreamsList"
+);
 
-
-  if (!list) return;
-
-
-  if (
-    !dreams ||
-    dreams.length === 0
-  ) {
-
-    list.innerHTML =
-      "<p class='empty-message'>🌙 No dreams match your search.</p>";
-
-    return;
-
-  }
+if (!list) return;
 
 
-  list.innerHTML = "";
+if (!dreams.length) {
 
+list.innerHTML =
+"<p class='empty'>🌙 No dreams match your search.</p>";
 
-  dreams.forEach(
-    function(dream) {
-
-
-      const item =
-        document.createElement(
-          "div"
-        );
-
-
-      item.className =
-        "dream-item";
-
-
-      const fullDream =
-        escapeHTML(
-          dream.dream_text
-        );
-
-
-      const preview =
-        fullDream.length > 180
-          ? fullDream.substring(
-              0,
-              180
-            ) + "..."
-          : fullDream;
-
-
-      item.innerHTML = `
-
-        <h3>
-          🌙 ${escapeHTML(
-            dream.title
-          )}
-        </h3>
-
-
-        <p>
-          Dream by
-          <strong>
-            ${escapeHTML(
-              dream.pseudonym
-            )}
-          </strong>
-        </p>
-
-
-        <p>
-          ${preview}
-        </p>
-
-
-        <p class="dream-meta">
-
-          ${
-            dream.emotion
-              ? "Feeling: " +
-                escapeHTML(
-                  dream.emotion
-                )
-              : ""
-          }
-
-          ${
-            dream.category
-              ? " · " +
-                escapeHTML(
-                  dream.category
-                )
-              : ""
-          }
-
-        </p>
-
-
-        <button
-          class="save-button"
-          onclick="viewDream('${dream.id}')">
-
-          📖 Read Full Dream
-
-        </button>
-
-
-        <br><br>
-
-
-        <small>
-          🌍 Shared anonymously
-        </small>
-
-      `;
-
-
-      list.appendChild(item);
-
-    }
-  );
+return;
 
 }
 
 
-/* ==========================================
-   VIEW FULL PUBLIC DREAM
-   ========================================== */
-
-async function viewDream(dreamId) {
-
-  const { data: dream, error } =
-    await supabaseClient
-      .from("dreams")
-      .select("*")
-      .eq(
-        "id",
-        dreamId
-      )
-      .eq(
-        "visibility",
-        "public"
-      )
-      .single();
+list.innerHTML = "";
 
 
-  if (error || !dream) {
+for (
+const dream of dreams
+) {
 
-    console.error(error);
+const item =
+document.createElement("div");
 
-    alert(
-      "We couldn't find that dream."
-    );
-
-    return;
-
-  }
+item.className =
+"dream-item";
 
 
-  const title =
-    document.getElementById(
-      "dreamDetailTitle"
-    );
+const counts =
+await getReactionCounts(
+dream.id
+);
 
 
-  const content =
-    document.getElementById(
-      "dreamDetailContent"
-    );
+const favorite =
+await isFavorite(
+dream.id
+);
 
 
-  const author =
-    document.getElementById(
-      "dreamDetailAuthor"
-    );
+item.innerHTML = `
 
+<h3>
+🌙 ${escapeHTML(dream.title)}
+</h3>
 
-  const emotion =
-    document.getElementById(
-      "dreamDetailEmotion"
-    );
+<p>
+Dream by
+<strong>
+${escapeHTML(dream.pseudonym)}
+</strong>
+</p>
 
+<p>
+${escapeHTML(
+dream.dream_text.length > 220
+? dream.dream_text.substring(
+0,220
+) + "..."
+: dream.dream_text
+)}
+</p>
 
-  const category =
-    document.getElementById(
-      "dreamDetailCategory"
-    );
+<p class="meta">
 
+${dream.emotion
+? "Feeling: " +
+escapeHTML(dream.emotion)
+: ""}
 
-  if (!title || !content) {
+${dream.category
+? " · " +
+escapeHTML(dream.category)
+: ""}
 
-    alert(
-      "Dream details page is not available."
-    );
+</p>
 
-    return;
+<div class="reactions">
 
-  }
+<button
+class="reaction-button"
+onclick="reactToDream('${dream.id}','love')">
 
+❤️ ${counts.love_count || 0}
 
-  title.textContent =
-    "🌙 " +
-    (
-      dream.title ||
-      "Untitled Dream"
-    );
+</button>
 
+<button
+class="reaction-button"
+onclick="reactToDream('${dream.id}','amazed')">
 
-  content.textContent =
-    dream.dream_text || "";
+😮 ${counts.amazed_count || 0}
 
+</button>
 
-  if (author) {
+<button
+class="reaction-button"
+onclick="reactToDream('${dream.id}','emotional')">
 
-    author.textContent =
-      "Dream by " +
-      (
-        dream.pseudonym ||
-        "Anonymous"
-      );
+😢 ${counts.emotional_count || 0}
 
-  }
+</button>
 
+<button
+class="reaction-button"
+onclick="reactToDream('${dream.id}','scary')">
 
-  if (emotion) {
+😨 ${counts.scary_count || 0}
 
-    emotion.textContent =
-      dream.emotion
-        ? "Feeling: " +
-          dream.emotion
-        : "";
+</button>
 
-  }
+<button
+class="reaction-button"
+onclick="reactToDream('${dream.id}','relatable')">
 
+🌙 ${counts.relatable_count || 0}
 
-  if (category) {
+</button>
 
-    category.textContent =
-      dream.category
-        ? "Category: " +
-          dream.category
-        : "";
+</div>
 
-  }
+<div class="button-row">
 
+<button
+class="save-button"
+onclick="viewDream('${dream.id}')">
 
-  showPage(
-    "dream-details"
-  );
+📖 Read Full Dream
+
+</button>
+
+<button
+class="outline-button"
+onclick="toggleFavorite('${dream.id}')">
+
+${favorite
+? "🔖 Saved"
+: "🔖 Save"}
+
+</button>
+
+<button
+class="outline-button"
+onclick="viewDreamer('${dream.user_id}')">
+
+👤 Dreamer
+
+</button>
+
+</div>
+
+<small>
+🌍 Shared anonymously
+</small>
+
+`;
+
+list.appendChild(item);
+
+}
 
 }
 
 
-/* ==========================================
-   CHECK CURRENT USER
-   ========================================== */
+/* ==================================================
+   VIEW FULL DREAM
+   ================================================== */
 
-async function checkUser() {
+async function viewDream(id) {
 
-  const { data } =
-    await supabaseClient.auth.getUser();
+const dream =
+publicDreams.find(
+d => d.id === id
+);
 
 
-  if (data.user) {
+if (!dream) {
 
-    console.log(
-      "Signed in user:",
-      data.user.id
-    );
+const { data } =
+await supabaseClient
+.from("dreams")
+.select("*")
+.eq("id",id)
+.eq(
+"visibility",
+"public"
+)
+.single();
 
-  } else {
+if (!data) {
 
-    console.log(
-      "No user currently signed in."
-    );
+alert(
+"Dream not found."
+);
 
-  }
+return;
+
+}
+
+currentDreamId = id;
+
+showDreamDetails(data);
+
+return;
 
 }
 
 
-/* ==========================================
-   START APPLICATION
-   ========================================== */
+currentDreamId = id;
 
-checkUser();
+showDreamDetails(dream);
+
+}
+
+
+async function showDreamDetails(dream) {
+
+document.getElementById(
+"dreamDetailTitle"
+).textContent =
+"🌙 " +
+(dream.title || "Untitled Dream");
+
+
+document.getElementById(
+"dreamDetailAuthor"
+).textContent =
+"Dream by " +
+(dream.pseudonym || "Anonymous Dreamer");
+
+
+document.getElementById(
+"dreamDetailContent"
+).textContent =
+dream.dream_text || "";
+
+
+document.getElementById(
+"dreamDetailEmotion"
+).textContent =
+dream.emotion
+? "Feeling: " + dream.emotion
+: "";
+
+
+document.getElementById(
+"dreamDetailCategory"
+).textContent =
+dream.category
+? "Category: " + dream.category
+: "";
+
+
+const button =
+document.getElementById(
+"detailFavoriteButton"
+);
+
+
+const saved =
+await isFavorite(dream.id);
+
+
+button.textContent =
+saved
+? "🔖 Saved"
+: "🔖 Save Dream";
+
+
+button.onclick =
+function() {
+
+toggleFavorite(
+dream.id
+);
+
+};
+
+
+const reactionBox =
+document.getElementById(
+"detailReactions"
+);
+
+
+const counts =
+await getReactionCounts(
+dream.id
+);
+
+
+reactionBox.innerHTML = `
+
+<button
+class="reaction-button"
+onclick="reactToDream('${dream.id}','love')">
+
+❤️ ${counts.love_count || 0}
+
+</button>
+
+<button
+class="reaction-button"
+onclick="reactToDream('${dream.id}','amazed')">
+
+😮 ${counts.amazed_count || 0}
+
+</button>
+
+<button
+class="reaction-button"
+onclick="reactToDream('${dream.id}','emotional')">
+
+😢 ${counts.emotional_count || 0}
+
+</button>
+
+<button
+class="reaction-button"
+onclick="reactToDream('${dream.id}','scary')">
+
+😨 ${counts.scary_count || 0}
+
+</button>
+
+<button
+class="reaction-button"
+onclick="reactToDream('${dream.id}','relatable')">
+
+🌙 ${counts.relatable_count || 0}
+
+</button>
+
+`;
+
+
+showPage(
+"dream-details"
+);
+
+}
+
+
+/* ==================================================
+   REACTIONS
+   ================================================== */
+
+async function getReactionCounts(
+dreamId
+) {
+
+const { data, error } =
+await supabaseClient
+.from("dream_reaction_counts")
+.select("*")
+.eq(
+"dream_id",
+dreamId
+)
+.maybeSingle();
+
+
+if (error || !data) {
+
+return {};
+
+}
+
+
+return data;
+
+}
+
+
+async function reactToDream(
+dreamId,
+reaction
+) {
+
+const { data: userData } =
+await supabaseClient.auth.getUser();
+
+
+if (!userData.user) {
+
+alert(
+"Please sign in to react to dreams. 🔐"
+);
+
+showPage("auth");
+
+return;
+
+}
+
+
+const { data: existing } =
+await supabaseClient
+.from("dream_reactions")
+.select("id,reaction")
+.eq(
+"dream_id",
+dreamId
+)
+.eq(
+"user_id",
+userData.user.id
+)
+.maybeSingle();
+
+
+if (existing) {
+
+if (existing.reaction === reaction) {
+
+await supabaseClient
+.from("dream_reactions")
+.delete()
+.eq(
+"id",
+existing.id
+);
+
+} else {
+
+await supabaseClient
+.from("dream_reactions")
+.update({
+reaction
+})
+.eq(
+"id",
+existing.id
+);
+
+}
+
+} else {
+
+const { error } =
+await supabaseClient
+.from("dream_reactions")
+.insert({
+
+dream_id: dreamId,
+
+user_id:
+userData.user.id,
+
+reaction
+
+});
+
+
+if (error) {
+
+alert(error.message);
+
+return;
+
+}
+
+}
+
+
+if (
+document
+.getElementById(
+"dream-details"
+)
+.classList.contains("active")
+) {
+
+const dream =
+publicDreams.find(
+d => d.id === dreamId
+);
+
+if (dream) {
+
+showDreamDetails(dream);
+
+}
+
+} else {
+
+loadPublicDreams();
+
+}
+
+}
+
+
+/* ==================================================
+   FAVORITES
+   ================================================== */
+
+async function isFavorite(
+dreamId
+) {
+
+const { data: userData } =
+await supabaseClient.auth.getUser();
+
+
+if (!userData.user) {
+
+return false;
+
+}
+
+
+const { data } =
+await supabaseClient
+.from("dream_favorites")
+.select("id")
+.eq(
+"dream_id",
+dreamId
+)
+.eq(
+"user_id",
+userData.user.id
+)
+.maybeSingle();
+
+
+return !!data;
+
+}
+
+
+async function toggleFavorite(
+dreamId
+) {
+
+const { data: userData } =
+await supabaseClient.auth.getUser();
+
+
+if (!userData.user) {
+
+alert(
+"Please sign in to save dreams. 🔐"
+);
+
+showPage("auth");
+
+return;
+
+}
+
+
+const saved =
+await isFavorite(
+dreamId
+);
+
+
+if (saved) {
+
+const { error } =
+await supabaseClient
+.from("dream_favorites")
+.delete()
+.eq(
+"dream_id",
+dreamId
+)
+.eq(
+"user_id",
+userData.user.id
+);
+
+
+if (error) {
+
+alert(error.message);
+
+return;
+
+}
+
+} else {
+
+const { error } =
+await supabaseClient
+.from("dream_favorites")
+.insert({
+
+dream_id: dreamId,
+
+user_id:
+userData.user.id
+
+});
+
+
+if (error) {
+
+alert(error.message);
+
+return;
+
+}
+
+}
+
+
+if (
+document
+.getElementById(
+"dream-details"
+)
+.classList.contains("active")
+) {
+
+const button =
+document.getElementById(
+"detailFavoriteButton"
+);
+
+button.textContent =
+await isFavorite(dreamId)
+? "🔖 Saved"
+: "🔖 Save Dream";
+
+} else {
+
+loadPublicDreams();
+
+}
+
+}
+
+
+/* ==================================================
+   FAVORITES PAGE
+   ================================================== */
+
+async function loadFavorites() {
+
+const list =
+document.getElementById(
+"favoritesList"
+);
+
+
+const { data: userData } =
+await supabaseClient.auth.getUser();
+
+
+if (!userData.user) {
+
+list.innerHTML =
+"<p class='empty'>🔐 Please sign in to see your saved dreams.</p>";
+
+return;
+
+}
+
+
+const { data, error } =
+await supabaseClient
+.from("my_saved_dreams")
+.select("*")
+.order(
+"saved_at",
+{ ascending:false }
+);
+
+
+if (error) {
+
+console.error(error);
+
+list.innerHTML =
+"<p class='empty'>Unable to load saved dreams.</p>";
+
+return;
+
+}
+
+
+if (!data.length) {
+
+list.innerHTML =
+"<p class='empty'>🔖 You haven't saved any public dreams yet.</p>";
+
+return;
+
+}
+
+
+list.innerHTML = "";
+
+
+data.forEach(
+function(dream) {
+
+const item =
+document.createElement(
+"div"
+);
+
+item.className =
+"dream-item";
+
+
+item.innerHTML = `
+
+<h3>
+🌙 ${escapeHTML(
+dream.title
+)}
+</h3>
+
+<p>
+Dream by
+<strong>
+${escapeHTML(
+dream.pseudonym
+)}
+</strong>
+</p>
+
+<p>
+${escapeHTML(
+dream.dream_text
+)}
+</p>
+
+<button
+class="save-button"
+onclick="viewDream('${dream.id}')">
+
+📖 Read Dream
+
+</button>
+
+<button
+class="outline-button"
+onclick="toggleFavorite('${dream.id}')">
+
+🔖 Remove Saved
+
+</button>
+
+`;
+
+
+list.appendChild(item);
+
+}
+);
+
+}
+
+
+/* ==================================================
+   PROFILE
+   ================================================== */
+
+async function loadProfile() {
+
+const { data: userData } =
+await supabaseClient.auth.getUser();
+
+
+if (!userData.user) {
+
+document.getElementById(
+"profileName"
+).textContent =
+"🔐 Sign in to create your profile.";
+
+return;
+
+}
+
+
+const userId =
+userData.user.id;
+
+
+let { data: profile } =
+await supabaseClient
+.from("profiles")
+.select("*")
+.eq(
+"user_id",
+userId
+)
+.maybeSingle();
+
+
+if (!profile) {
+
+await supabaseClient
+.from("profiles")
+.insert({
+
+user_id:userId
+
+});
+
+
+const response =
+await supabaseClient
+.from("profiles")
+.select("*")
+.eq(
+"user_id",
+userId
+)
+.single();
+
+profile =
+response.data;
+
+}
+
+
+document.getElementById(
+"profileName"
+).textContent =
+profile.display_name ||
+profile.pseudonym ||
+"Anonymous Dreamer";
+
+
+document.getElementById(
+"profileBio"
+).textContent =
+profile.bio ||
+"No bio yet.";
+
+
+document.getElementById(
+"profileDisplayName"
+).value =
+profile.display_name || "";
+
+
+document.getElementById(
+"profileBioInput"
+).value =
+profile.bio || "";
+
+
+const stats =
+await supabaseClient
+.rpc(
+"get_profile_statistics",
+{
+profile_user_id:userId
+}
+);
+
+
+if (stats.data) {
+
+document.getElementById(
+"profileDreamCount"
+).textContent =
+stats.data.public_dreams || 0;
+
+
+document.getElementById(
+"profileReactionCount"
+).textContent =
+stats.data.total_reactions || 0;
+
+}
+
+
+loadProfileDreams(
+userId
+);
+
+}
+
+
+async function saveProfile() {
+
+const { data: userData } =
+await supabaseClient.auth.getUser();
+
+
+if (!userData.user) {
+
+showPage("auth");
+
+return;
+
+}
+
+
+const displayName =
+document.getElementById(
+"profileDisplayName"
+).value.trim();
+
+
+const bio =
+document.getElementById(
+"profileBioInput"
+).value.trim();
+
+
+const { error } =
+await supabaseClient
+.from("profiles")
+.update({
+
+display_name:
+displayName,
+
+bio:
+bio
+
+})
+.eq(
+"user_id",
+userData.user.id
+);
+
+
+if (error) {
+
+alert(error.message);
+
+return;
+
+}
+
+
+alert(
+"👤 Profile updated."
+);
+
+loadProfile();
+
+}
+
+
+async function loadProfileDreams(
+userId
+) {
+
+const container =
+document.getElementById(
+"profileDreams"
+);
+
+
+const { data, error } =
+await supabaseClient
+.from("dreams")
+.select("*")
+.eq(
+"user_id",
+userId
+)
+.eq(
+"visibility",
+"public"
+)
+.order(
+"created_at",
+{ ascending:false }
+);
+
+
+if (error) {
+
+container.innerHTML =
+"<h3>🌙 Your Public Dreams</h3><p>Unable to load dreams.</p>";
+
+return;
+
+}
+
+
+if (!data.length) {
+
+container.innerHTML =
+"<h3>🌙 Your Public Dreams</h3><p class='empty'>No public dreams yet.</p>";
+
+return;
+
+}
+
+
+container.innerHTML =
+"<h3>🌙 Your Public Dreams</h3>";
+
+
+data.forEach(
+function(dream) {
+
+const item =
+document.createElement(
+"div"
+);
+
+item.className =
+"dream-item";
+
+
+item.innerHTML = `
+
+<h3>
+🌙 ${escapeHTML(
+dream.title
+)}
+</h3>
+
+<p>
+${escapeHTML(
+dream.dream_text
+)}
+</p>
+
+<button
+class="save-button"
+onclick="viewDream('${dream.id}')">
+
+📖 Read
+
+</button>
+
+`;
+
+
+container.appendChild(item);
+
+}
+);
+
+}
+
+
+/* ==================================================
+   VIEW OTHER DREAMER
+   ================================================== */
+
+async function viewDreamer(
+userId
+) {
+
+const { data: profile } =
+await supabaseClient
+.from("public_dreamer_profiles")
+.select("*")
+.eq(
+"user_id",
+userId
+)
+.maybeSingle();
+
+
+if (!profile) {
+
+alert(
+"Dreamer profile not found."
+);
+
+return;
+
+}
+
+
+document.getElementById(
+"profileName"
+).textContent =
+profile.display_name;
+
+
+document.getElementById(
+"profileBio"
+).textContent =
+profile.bio ||
+"No bio yet.";
+
+
+document.getElementById(
+"profileDisplayName"
+).value =
+profile.display_name || "";
+
+
+document.getElementById(
+"profileBioInput"
+).value =
+profile.bio || "";
+
+
+document.getElementById(
+"profileDreamCount"
+).textContent =
+profile.public_dreams || 0;
+
+
+document.getElementById(
+"profileReactionCount"
+).textContent =
+profile.reactions_received || 0;
+
+
+loadProfileDreams(
+userId
+);
+
+showPage(
+"profile"
+);
+
+}
+
+
+/* ==================================================
+   STATISTICS
+   ================================================== */
+
+async function loadStatistics() {
+
+const personal =
+document.getElementById(
+"personalStats"
+);
+
+
+const world =
+document.getElementById(
+"worldStatistics"
+);
+
+
+const { data: userData } =
+await supabaseClient.auth.getUser();
+
+
+if (!userData.user) {
+
+personal.innerHTML =
+"<p class='empty'>🔐 Sign in to see your personal statistics.</p>";
+
+} else {
+
+const { data, error } =
+await supabaseClient
+.rpc(
+"get_my_dream_statistics"
+);
+
+
+if (error) {
+
+console.error(error);
+
+personal.innerHTML =
+"<p>Unable to load personal statistics.</p>";
+
+} else {
+
+personal.innerHTML = `
+
+<h3>📊 Your Statistics</h3>
+
+<div class="stat-grid">
+
+<div class="stat">
+<strong>${data.total_dreams || 0}</strong>
+Total Dreams
+</div>
+
+<div class="stat">
+<strong>${data.public_dreams || 0}</strong>
+Public
+</div>
+
+<div class="stat">
+<strong>${data.private_dreams || 0}</strong>
+Private
+</div>
+
+<div class="stat">
+<strong>${data.total_reactions || 0}</strong>
+Reactions
+</div>
+
+<div class="stat">
+<strong>${data.total_favorites_received || 0}</strong>
+Favorites
+</div>
+
+</div>
+
+`;
+
+}
+
+}
+
+
+const { data: global, error } =
+await supabaseClient
+.from("world_dream_statistics")
+.select("*")
+.maybeSingle();
+
+
+if (error || !global) {
+
+world.innerHTML =
+"<h3>🌎 Worldwide Library</h3><p>Statistics unavailable.</p>";
+
+return;
+
+}
+
+
+world.innerHTML = `
+
+<h3>🌎 Worldwide Library</h3>
+
+<div class="stat-grid">
+
+<div class="stat">
+
+<strong>
+${global.total_public_dreams || 0}
+</strong>
+
+Public Dreams
+
+</div>
+
+<div class="stat">
+
+<strong>
+${global.total_dreamers || 0}
+</strong>
+
+Dreamers
+
+</div>
+
+<div class="stat">
+
+<strong>
+${global.adventure_dreams || 0}
+</strong>
+
+Adventure
+
+</div>
+
+<div class="stat">
+
+<strong>
+${global.love_dreams || 0}
+</strong>
+
+Love
+
+</div>
+
+<div class="stat">
+
+<strong>
+${global.fear_dreams || 0}
+</strong>
+
+Fear
+
+</div>
+
+<div class="stat">
+
+<strong>
+${global.spiritual_dreams || 0}
+</strong>
+
+Spiritual
+
+</div>
+
+</div>
+
+`;
+
+
+const homeStats =
+document.getElementById(
+"worldStatsHome"
+);
+
+
+if (homeStats) {
+
+homeStats.innerHTML = `
+
+<h3>🌎 The Library Today</h3>
+
+<p>
+
+<strong>
+${global.total_public_dreams || 0}
+</strong>
+public dreams from
+
+<strong>
+${global.total_dreamers || 0}
+</strong>
+dreamers.
+
+</p>
+
+`;
+
+}
+
+}
+
+
+/* ==================================================
+   START
+   ================================================== */
+
+async function initializeApp() {
+
+await supabaseClient.auth.getUser();
+
+loadPublicDreams();
+
+loadStatistics();
+
+}
+
+
+initializeApp();
+
 
 </script>
 
 </body>
 
-</html>>
+</html>
     
