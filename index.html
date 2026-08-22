@@ -503,7 +503,59 @@
 <p class="tagline">
   Anonymous dreams shared by people around the world.
 </p>
+<div class="card">
 
+  <label for="dreamSearch">
+    🔎 Search Dreams
+  </label>
+
+  <input
+    type="text"
+    id="dreamSearch"
+    placeholder="Search by title or dream..."
+    oninput="filterPublicDreams()"
+  >
+
+  <label for="dreamCategoryFilter">
+    🏷️ Category
+  </label>
+
+  <select
+    id="dreamCategoryFilter"
+    onchange="filterPublicDreams()">
+
+    <option value="">All Categories</option>
+    <option value="Adventure">Adventure</option>
+    <option value="Family">Family</option>
+    <option value="Love">Love</option>
+    <option value="Fear">Fear</option>
+    <option value="Spiritual">Spiritual</option>
+    <option value="Nature">Nature</option>
+    <option value="Animals">Animals</option>
+    <option value="Other">Other</option>
+
+  </select>
+
+
+  <label for="dreamEmotionFilter">
+    😊 Emotion
+  </label>
+
+  <select
+    id="dreamEmotionFilter"
+    onchange="filterPublicDreams()">
+
+    <option value="">All Emotions</option>
+    <option value="😊 Happy">😊 Happy</option>
+    <option value="😨 Afraid">😨 Afraid</option>
+    <option value="😌 Peaceful">😌 Peaceful</option>
+    <option value="😢 Sad">😢 Sad</option>
+    <option value="😮 Amazed">😮 Amazed</option>
+    <option value="😕 Confused">😕 Confused</option>
+
+  </select>
+
+</div>
 <div class="card">
 
   <div id="publicDreamsList">
@@ -1006,37 +1058,79 @@ async function editDream(dreamId) {
   showPage("recorder");
 
 }
-  
-  // LOAD PUBLIC DREAMS
+  // FILTER PUBLIC DREAMS
 
-async function loadPublicDreams() {
+function filterPublicDreams() {
+
+  const searchInput =
+    document.getElementById("dreamSearch");
+
+  const categoryInput =
+    document.getElementById("dreamCategoryFilter");
+
+  const emotionInput =
+    document.getElementById("dreamEmotionFilter");
+
+  const search =
+    searchInput
+      ? searchInput.value.toLowerCase().trim()
+      : "";
+
+  const category =
+    categoryInput
+      ? categoryInput.value
+      : "";
+
+  const emotion =
+    emotionInput
+      ? emotionInput.value
+      : "";
+
+  const filtered =
+    publicDreams.filter(function(dream) {
+
+      const matchesSearch =
+        !search ||
+        (dream.title || "")
+          .toLowerCase()
+          .includes(search) ||
+        (dream.dream_text || "")
+          .toLowerCase()
+          .includes(search);
+
+      const matchesCategory =
+        !category ||
+        dream.category === category;
+
+      const matchesEmotion =
+        !emotion ||
+        dream.emotion === emotion;
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesEmotion
+      );
+
+    });
+
+  renderPublicDreams(filtered);
+}
+
+
+// DISPLAY PUBLIC DREAMS
+
+function renderPublicDreams(dreams) {
 
   const list =
     document.getElementById("publicDreamsList");
 
   if (!list) return;
 
-  const { data: dreams, error } =
-    await supabaseClient
-      .from("dreams")
-      .select("*")
-      .eq("visibility", "public")
-      .order("created_at", { ascending: false });
-
-  if (error) {
-
-    console.error(error);
-
-    list.innerHTML =
-      "<p>Unable to load public dreams.</p>";
-
-    return;
-  }
-
   if (!dreams || dreams.length === 0) {
 
     list.innerHTML =
-      "<p>🌙 No public dreams have been shared yet.</p>";
+      "<p>🌙 No dreams match your search.</p>";
 
     return;
   }
