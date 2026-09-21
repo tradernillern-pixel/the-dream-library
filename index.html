@@ -343,55 +343,330 @@ Dreams remembered. Stories preserved.
 
 <!-- HOME -->
 
-<section id="home" class="page active">
+<section id="home" class="page">
 
-<h2>Welcome to The Dream Library</h2>
+  <!-- HERO -->
+  <div style="
+    text-align:center;
+    padding:35px 15px 25px;
+  ">
 
-<p class="tagline">
-A worldwide home for human dreams.
-</p>
+    <div style="
+      font-size:52px;
+      margin-bottom:8px;
+    ">
+      🌙
+    </div>
 
-<div class="card">
+    <h1 style="
+      font-size:clamp(36px, 9vw, 64px);
+      margin:0 0 12px;
+      line-height:1.1;
+    ">
+      Did you dream?
+    </h1>
 
-<h3>🌙 Every dream tells a story.</h3>
+    <p style="
+      font-size:20px;
+      opacity:.85;
+      margin:0 auto;
+      max-width:600px;
+    ">
+      What do you want to do with your dream?
+    </p>
 
-<p>
-Record your dreams, keep your private memories
-safe, or anonymously contribute them to a growing
-collection of dreams from around the world.
-</p>
+  </div>
 
-<div class="button-row">
 
-<button
-class="save-button"
-onclick="showPage('recorder')">
+  <!-- FOUR DREAM ACTIONS -->
+  <div style="
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:18px;
+    max-width:1000px;
+    margin:10px auto 45px;
+    padding:0 15px;
+  ">
 
-✍️ Record a Dream
 
-</button>
+    <!-- RECORD -->
+    <div class="card" style="text-align:center;">
 
-<button
-class="outline-button"
-onclick="showPage('library')">
+      <div style="font-size:38px;">
+        ✍️
+      </div>
 
-🌎 Explore the Library
+      <h2>Record It</h2>
 
-</button>
+      <p>
+        Save your dream privately in your personal Dream Library.
+      </p>
 
-</div>
+      <button
+        class="save-button"
+        onclick="showPage('recorder')">
 
-</div>
+        ✍️ Record Dream
 
-<div
-id="worldStatsHome"
-class="card">
+      </button>
 
-<p class="empty">
-Loading worldwide library...
-</p>
+    </div>
 
-</div>
+
+    <!-- SHARE -->
+    <div class="card" style="text-align:center;">
+
+      <div style="font-size:38px;">
+        🌍
+      </div>
+
+      <h2>Share It</h2>
+
+      <p>
+        Share your dream anonymously and let other dreamers experience it.
+      </p>
+
+      <button
+        class="save-button"
+        onclick="showPage('recorder')">
+
+        🌍 Share Dream
+
+      </button>
+
+    </div>
+
+
+    <!-- MEANING -->
+    <div class="card" style="text-align:center;">
+
+      <div style="font-size:38px;">
+        🔎
+      </div>
+
+      <h2>Understand It</h2>
+
+      <p>
+        Explore possible meanings, symbols and themes connected to dreams.
+      </p>
+
+      <button
+        class="outline-button"
+        onclick="showPage('explore')">
+
+        🔎 Explore Dreams
+
+      </button>
+
+    </div>
+
+
+    <!-- SIMILAR DREAMS -->
+    <div class="card" style="text-align:center;">
+
+      <div style="font-size:38px;">
+        👥
+      </div>
+
+      <h2>Find Similar Dreams</h2>
+
+      <p>
+        Discover whether other people have experienced something similar.
+      </p>
+
+      <button
+        class="outline-button"
+        onclick="showPage('explore')">
+
+        👥 Find Dreams
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- EXPLORE SECTION -->
+  <div style="
+    text-align:center;
+    padding:20px 15px 35px;
+  ">
+
+    <h2 style="
+      font-size:32px;
+      margin-bottom:8px;
+    ">
+      🌌 Explore The Dream Library
+    </h2>
+
+    <p style="
+      font-size:18px;
+      opacity:.8;
+    ">
+      Real dreams. Real people. Real experiences.
+    </p>
+
+
+    <!-- DREAM CATEGORIES -->
+    <div style="
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:10px;
+      margin:25px auto;
+      max-width:900px;
+    ">
+
+      <button
+        class="outline-button"
+        onclick="showPage('explore')">
+        🌑 Nightmares
+      </button>
+
+      <button
+        class="outline-button"
+        onclick="showPage('explore')">
+        ❤️ Love
+      </button>
+
+      <button
+        class="outline-button"
+        onclick="showPage('explore')">
+        ✈️ Flying
+      </button>
+
+      <button
+        class="outline-button"
+        onclick="showPage('explore')">
+        👨‍👩‍👧 Family
+      </button>
+
+      <button
+        class="outline-button"
+        onclick="showPage('explore')">
+        🌊 Water
+      </button>
+
+      <button
+        class="outline-button"
+        onclick="showPage('explore')">
+        🐾 Animals
+      </button>
+
+    </div>
+
+
+    <button
+      class="save-button"
+      onclick="showPage('explore')">
+
+      📖 Explore All Dreams
+
+    </button>
+
+  </div>
+
+
+  <!-- TRUST / PRIVACY -->
+  <div style="
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:15px;
+    max-width:900px;
+    margin:15px auto 40px;
+    padding:0 15px;
+  ">
+
+
+    <div class="card" style="text-align:center;">
+
+      <div style="font-size:32px;">
+        👤
+      </div>
+
+      <h3>Anonymous</h3>
+
+      <p>
+        Share your dreams without revealing your identity.
+      </p>
+
+    </div>
+
+
+    <div class="card" style="text-align:center;">
+
+      <div style="font-size:32px;">
+        🔒
+      </div>
+
+      <h3>Private</h3>
+
+      <p>
+        Your private dreams stay connected to your account.
+      </p>
+
+    </div>
+
+
+    <div class="card" style="text-align:center;">
+
+      <div style="font-size:32px;">
+        🛡️
+      </div>
+
+      <h3>Secure</h3>
+
+      <p>
+        Your account and dreams are protected by our security rules.
+      </p>
+
+    </div>
+
+
+    <div class="card" style="text-align:center;">
+
+      <div style="font-size:32px;">
+        🌙
+      </div>
+
+      <h3>Forever Yours</h3>
+
+      <p>
+        A place to preserve the dreams you never want to forget.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- FINAL CALL TO ACTION -->
+  <div style="
+    text-align:center;
+    padding:25px 15px 45px;
+  ">
+
+    <h2>
+      Your dreams matter.
+    </h2>
+
+    <p style="
+      font-size:18px;
+      opacity:.8;
+    ">
+      Dreams remembered. Stories preserved.
+    </p>
+
+    <button
+      class="save-button"
+      onclick="showPage('recorder')">
+
+      🌙 Record Your Dream
+
+    </button>
+
+  </div>
 
 </section>
 
