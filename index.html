@@ -326,6 +326,10 @@ Dreams remembered. Stories preserved.
 🔖 Saved
 </button>
 
+<button onclick="showPage('notifications')">
+🔔 Notifications <span id="notificationBadge" style="display:none;"></span>
+</button>
+
 <button onclick="showPage('profile')">
 👤 Profile
 </button>
@@ -1046,6 +1050,28 @@ Loading saved dreams...
 
 </section>
 
+<!-- NOTIFICATIONS -->
+
+<section id="notifications" class="page">
+
+<h2>🔔 Notifications</h2>
+
+<p class="tagline">
+See who is interacting with your dreams.
+</p>
+
+<div class="card">
+  <div class="button-row" style="justify-content:space-between; align-items:center;">
+    <p id="notificationSummary" class="meta">Your latest activity will appear here.</p>
+    <button class="outline-button" onclick="markAllNotificationsRead()">Mark all as read</button>
+  </div>
+  <div id="notificationsList">
+    <p class="empty">Loading notifications...</p>
+  </div>
+</div>
+
+</section>
+
   
 <!-- PROFILE -->
 
@@ -1315,6 +1341,177 @@ if (pageId === "statistics") {
 loadStatistics();
 }
 
+if (pageId === "notifications") {
+loadNotifications();
+}
+
+}
+
+
+/* ==================================================
+   NOTIFICATIONS
+   ================================================== */
+
+async function loadNotificationBadge() {
+
+const badge = document.getElementById("notificationBadge");
+if (!badge) return;
+
+const { data: userData } = await supabaseClient.auth.getUser();
+if (!userData.user) {
+badge.style.display = "none";
+return;
+}
+
+const { count, error } = await supabaseClient
+.from("notifications")
+.select("id", { count: "exact", head: true })
+.eq("is_read", false);
+
+if (error) {
+console.warn("Notification badge error:", error);
+return;
+}
+
+if (count > 0) {
+badge.textContent = count > 9 ? "9+" : String(count);
+badge.style.display = "inline-block";
+} else {
+badge.textContent = "";
+badge.style.display = "none";
+}
+
+}
+
+
+async function loadNotifications() {
+
+const list = document.getElementById("notificationsList");
+const summary = document.getElementById("notificationSummary");
+if (!list) return;
+
+const { data: userData } = await supabaseClient.auth.getUser();
+if (!userData.user) {
+list.innerHTML = "<p class='empty'>Please sign in to view your notifications.</p>";
+summary.textContent = "Sign in to see your activity.";
+return;
+}
+
+list.innerHTML = "<p class='empty'>Loading notifications...</p>";
+
+const { data: rows, error } = await supabaseClient
+.from("notifications")
+.select("id,actor_id,dream_id,comment_id,notification_type,is_read,created_at")
+.order("created_at", { ascending: false })
+.limit(50);
+
+if (error) {
+console.error("Notifications loading error:", error);
+list.innerHTML = "<p class='empty'>Unable to load notifications. Please try again.</p>";
+return;
+}
+
+const notifications = rows || [];
+const unread = notifications.filter(item => !item.is_read).length;
+summary.textContent = unread
+? unread + " unread notification" + (unread === 1 ? "" : "s")
+: "You're all caught up. 🌙";
+
+if (!notifications.length) {
+list.innerHTML = "<p class='empty'>No notifications yet. When someone comments, replies or reacts to your dreams, you'll see it here.</p>";
+await loadNotificationBadge();
+return;
+}
+
+const actorIds = [...new Set(notifications.map(item => item.actor_id))];
+const dreamIds = [...new Set(notifications.map(item => item.dream_id))];
+
+const [{ data: profiles }, { data: dreams }] = await Promise.all([
+supabaseClient.from("profiles").select("user_id,display_name,pseudonym").in("user_id", actorIds),
+supabaseClient.from("dreams").select("id,title").in("id", dreamIds)
+]);
+
+const profileMap = {};
+(profiles || []).forEach(profile => {
+profileMap[profile.user_id] = profile.display_name || profile.pseudonym || "A dreamer";
+});
+
+const dreamMap = {};
+(dreams || []).forEach(dream => {
+dreamMap[dream.id] = dream.title || "Untitled Dream";
+});
+
+list.innerHTML = "";
+
+notifications.forEach(item => {
+const actor = escapeHTML(profileMap[item.actor_id] || "A dreamer");
+const title = escapeHTML(dreamMap[item.dream_id] || "your dream");
+let message = "interacted with";
+if (item.notification_type === "comment") message = "commented on";
+if (item.notification_type === "reply") message = "replied to your comment on";
+if (item.notification_type === "reaction") message = "reacted to";
+
+const row = document.createElement("div");
+row.className = "card";
+row.style.marginBottom = "12px";
+row.style.cursor = "pointer";
+row.style.borderLeft = item.is_read ? "3px solid #345170" : "3px solid #70b7ff";
+row.innerHTML = `
+  <p style="margin:0 0 8px;">
+    <strong>${actor}</strong> ${message} <strong>"${title}"</strong>
+    ${item.is_read ? "" : "<span class='meta'> • NEW</span>"}
+  </p>
+  <small class="meta">${new Date(item.created_at).toLocaleString()}</small>
+`;
+row.addEventListener("click", function() {
+openNotification(item.id, item.dream_id);
+});
+list.appendChild(row);
+});
+
+await loadNotificationBadge();
+
+}
+
+
+async function openNotification(notificationId, dreamId) {
+
+const { error } = await supabaseClient
+.from("notifications")
+.update({ is_read: true })
+.eq("id", notificationId);
+
+if (error) {
+console.error("Could not mark notification as read:", error);
+}
+
+await loadNotificationBadge();
+viewDream(dreamId);
+
+}
+
+
+async function markAllNotificationsRead() {
+
+const { data: userData } = await supabaseClient.auth.getUser();
+if (!userData.user) {
+alert("Please sign in first.");
+return;
+}
+
+const { error } = await supabaseClient
+.from("notifications")
+.update({ is_read: true })
+.eq("is_read", false);
+
+if (error) {
+alert("Could not update notifications: " + error.message);
+return;
+}
+
+await loadNotifications();
+await loadNotificationBadge();
+
 }
 
 
@@ -1428,6 +1625,7 @@ alert(
 "Welcome back to The Dream Library. 🌙"
 );
 
+loadNotificationBadge();
 showPage("my-dreams");
 
 }
@@ -3948,6 +4146,8 @@ await supabaseClient.auth.getUser();
 loadPublicDreams();
 
 loadStatistics();
+
+loadNotificationBadge();
 
 }
 
