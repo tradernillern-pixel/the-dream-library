@@ -991,6 +991,34 @@ onclick="showPage('library')">
 
 </div>
 
+<div class="card" style="margin-top:18px;">
+
+<h3>💬 Comments</h3>
+
+<div id="dreamCommentsList">
+<p class="empty">Loading comments...</p>
+</div>
+
+<div id="dreamCommentForm" style="margin-top:16px;">
+<label for="dreamCommentInput">Share your thoughts</label>
+<textarea
+id="dreamCommentInput"
+maxlength="1000"
+rows="3"
+placeholder="Write a respectful comment..."></textarea>
+<small id="dreamCommentCount" class="meta">0 / 1000</small>
+<button
+class="save-button"
+onclick="addDreamComment()"
+style="margin-top:10px;">
+💬 Post Comment
+</button>
+</div>
+
+<p id="dreamCommentNotice" class="meta"></p>
+
+</div>
+
 </div>
 
 </section>
@@ -2374,6 +2402,191 @@ onclick="reactToDream('${dream.id}','relatable')">
 showPage(
 "dream-details"
 );
+
+loadDreamComments(dream.id);
+
+}
+
+
+/* ==================================================
+   DREAM COMMENTS
+   ================================================== */
+
+async function loadDreamComments(dreamId) {
+
+const list = document.getElementById("dreamCommentsList");
+const form = document.getElementById("dreamCommentForm");
+const notice = document.getElementById("dreamCommentNotice");
+
+if (!list || !dreamId) return;
+
+list.innerHTML = "<p class='empty'>Loading comments...</p>";
+notice.textContent = "";
+
+const { data: userData } = await supabaseClient.auth.getUser();
+const currentUser = userData?.user || null;
+
+const { data: comments, error } = await supabaseClient
+.from("dream_comments")
+.select("id,dream_id,user_id,content,created_at")
+.eq("dream_id", dreamId)
+.order("created_at", { ascending: true });
+
+if (error) {
+console.error("Comments loading error:", error);
+list.innerHTML = "<p class='empty'>Unable to load comments. Please refresh and try again.</p>";
+if (form) form.style.display = currentUser ? "block" : "none";
+return;
+}
+
+if (!comments || comments.length === 0) {
+list.innerHTML = "<p class='empty'>No comments yet. Be the first to share a thought.</p>";
+} else {
+
+const userIds = [...new Set(comments.map(comment => comment.user_id))];
+let profiles = [];
+
+if (userIds.length) {
+const { data: profileData, error: profileError } = await supabaseClient
+.from("profiles")
+.select("user_id,display_name,pseudonym")
+.in("user_id", userIds);
+
+if (profileError) {
+console.warn("Could not load comment profiles:", profileError);
+} else {
+profiles = profileData || [];
+}
+}
+
+const profileMap = {};
+profiles.forEach(profile => {
+profileMap[profile.user_id] =
+profile.display_name || profile.pseudonym || "Anonymous Dreamer";
+});
+
+list.innerHTML = comments.map(comment => {
+const author = profileMap[comment.user_id] || "Anonymous Dreamer";
+const date = new Date(comment.created_at).toLocaleString();
+const ownComment = currentUser && currentUser.id === comment.user_id;
+
+return `
+<div class="dream-item" style="margin:12px 0;padding:12px;">
+<strong>${escapeHTML(author)}</strong>
+<small class="meta" style="display:block;">${escapeHTML(date)}</small>
+<p style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHTML(comment.content)}</p>
+${ownComment ? `<button class="outline-button" onclick="deleteDreamComment('${comment.id}')">🗑️ Delete</button>` : ""}
+</div>
+`;
+}).join("");
+
+}
+
+if (form) {
+form.style.display = currentUser ? "block" : "none";
+}
+
+if (!currentUser) {
+notice.innerHTML = "🔐 <button class='outline-button' onclick='showPage(\"auth\")'>Sign in</button> to post a comment.";
+}
+
+const input = document.getElementById("dreamCommentInput");
+const counter = document.getElementById("dreamCommentCount");
+if (input && counter && !input.dataset.counterReady) {
+input.addEventListener("input", () => {
+counter.textContent = input.value.length + " / 1000";
+});
+input.dataset.counterReady = "true";
+}
+
+}
+
+
+async function addDreamComment() {
+
+const input = document.getElementById("dreamCommentInput");
+const notice = document.getElementById("dreamCommentNotice");
+const content = input ? input.value.trim() : "";
+
+if (!currentDreamId) {
+alert("Please open a dream before commenting.");
+return;
+}
+
+if (!content) {
+alert("Please write a comment first.");
+return;
+}
+
+if (content.length > 1000) {
+alert("Comments must be 1000 characters or fewer.");
+return;
+}
+
+const { data: userData } = await supabaseClient.auth.getUser();
+if (!userData.user) {
+alert("Please sign in to comment. 🔐");
+showPage("auth");
+return;
+}
+
+const button = document.querySelector("#dreamCommentForm button");
+if (button) {
+button.disabled = true;
+button.textContent = "Posting...";
+}
+
+const { error } = await supabaseClient
+.from("dream_comments")
+.insert({
+dream_id: currentDreamId,
+user_id: userData.user.id,
+content: content
+});
+
+if (button) {
+button.disabled = false;
+button.textContent = "💬 Post Comment";
+}
+
+if (error) {
+console.error("Comment posting error:", error);
+notice.textContent = "Unable to post comment: " + error.message;
+return;
+}
+
+input.value = "";
+const counter = document.getElementById("dreamCommentCount");
+if (counter) counter.textContent = "0 / 1000";
+
+await loadDreamComments(currentDreamId);
+
+}
+
+
+async function deleteDreamComment(commentId) {
+
+if (!confirm("Delete this comment? This cannot be undone.")) return;
+
+const { data: userData } = await supabaseClient.auth.getUser();
+if (!userData.user) {
+alert("Please sign in first.");
+return;
+}
+
+const { error } = await supabaseClient
+.from("dream_comments")
+.delete()
+.eq("id", commentId)
+.eq("user_id", userData.user.id);
+
+if (error) {
+console.error("Comment deletion error:", error);
+alert("Unable to delete comment: " + error.message);
+return;
+}
+
+await loadDreamComments(currentDreamId);
 
 }
 
