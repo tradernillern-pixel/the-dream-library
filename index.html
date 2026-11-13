@@ -1291,6 +1291,7 @@ let publicDreams = [];
 let currentDreamId = null;
 
 let editingDreamId = null;
+let notificationChannel = null;
 
 
 /* ==================================================
@@ -1343,6 +1344,66 @@ loadStatistics();
 
 if (pageId === "notifications") {
 loadNotifications();
+}
+
+}
+
+
+/* ==================================================
+   LIVE NOTIFICATIONS
+   ================================================== */
+
+async function startNotificationRealtime() {
+
+const { data: userData } = await supabaseClient.auth.getUser();
+const user = userData?.user;
+
+if (!user) {
+await stopNotificationRealtime();
+return;
+}
+
+if (notificationChannel) {
+await supabaseClient.removeChannel(notificationChannel);
+notificationChannel = null;
+}
+
+notificationChannel = supabaseClient
+.channel("live-notifications-" + user.id)
+.on(
+"postgres_changes",
+{
+event: "*",
+schema: "public",
+table: "notifications",
+filter: "recipient_id=eq." + user.id
+},
+function(payload) {
+loadNotificationBadge();
+
+const page = document.getElementById("notifications");
+if (page && page.classList.contains("active")) {
+loadNotifications();
+}
+}
+)
+.subscribe(function(status) {
+if (status === "SUBSCRIBED") {
+console.log("Live notifications connected.");
+}
+if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+console.warn("Live notifications connection:", status);
+}
+});
+
+}
+
+
+async function stopNotificationRealtime() {
+
+if (notificationChannel) {
+await supabaseClient.removeChannel(notificationChannel);
+notificationChannel = null;
 }
 
 }
@@ -1626,12 +1687,15 @@ alert(
 );
 
 loadNotificationBadge();
+startNotificationRealtime();
 showPage("my-dreams");
 
 }
 
 
 async function signOut() {
+
+await stopNotificationRealtime();
 
 const { error } =
 await supabaseClient.auth.signOut();
@@ -4142,6 +4206,8 @@ dreamers.
 async function initializeApp() {
 
 await supabaseClient.auth.getUser();
+
+startNotificationRealtime();
 
 loadPublicDreams();
 
