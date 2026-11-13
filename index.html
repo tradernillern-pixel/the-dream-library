@@ -2428,7 +2428,7 @@ const currentUser = userData?.user || null;
 
 const { data: comments, error } = await supabaseClient
 .from("dream_comments")
-.select("id,dream_id,user_id,content,created_at")
+.select("id,dream_id,user_id,content,created_at,parent_comment_id")
 .eq("dream_id", dreamId)
 .order("created_at", { ascending: true });
 
@@ -2465,20 +2465,41 @@ profileMap[profile.user_id] =
 profile.display_name || profile.pseudonym || "Anonymous Dreamer";
 });
 
-list.innerHTML = comments.map(comment => {
+const topLevelComments = comments.filter(comment => !comment.parent_comment_id);
+const repliesByParent = {};
+comments.filter(comment => comment.parent_comment_id).forEach(reply => {
+if (!repliesByParent[reply.parent_comment_id]) {
+repliesByParent[reply.parent_comment_id] = [];
+}
+repliesByParent[reply.parent_comment_id].push(reply);
+});
+
+const renderOneComment = (comment, isReply = false) => {
 const author = profileMap[comment.user_id] || "Anonymous Dreamer";
 const date = new Date(comment.created_at).toLocaleString();
 const ownComment = currentUser && currentUser.id === comment.user_id;
 
 return `
-<div class="dream-item" style="margin:12px 0;padding:12px;">
+<div class="dream-item" style="margin:12px 0;padding:12px;${isReply ? "margin-left:22px;border-left:3px solid var(--accent, #8b7cf6);" : ""}">
 <strong>${escapeHTML(author)}</strong>
 <small class="meta" style="display:block;">${escapeHTML(date)}</small>
 <p style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHTML(comment.content)}</p>
+<div class="button-row">
+${!isReply && currentUser ? `<button class="outline-button" onclick="toggleDreamReplyForm('${comment.id}')">↩️ Reply</button>` : ""}
 ${ownComment ? `<button class="outline-button" onclick="deleteDreamComment('${comment.id}')">🗑️ Delete</button>` : ""}
 </div>
+${!isReply && currentUser ? `
+<div id="dreamReplyForm_${comment.id}" style="display:none;margin-top:10px;">
+<textarea id="dreamReplyInput_${comment.id}" maxlength="1000" rows="2" placeholder="Write a reply..."></textarea>
+<button class="save-button" onclick="addDreamReply('${comment.id}')" style="margin-top:8px;">Send Reply</button>
+</div>
+` : ""}
+${!isReply ? (repliesByParent[comment.id] || []).map(reply => renderOneComment(reply, true)).join("") : ""}
+</div>
 `;
-}).join("");
+};
+
+list.innerHTML = topLevelComments.map(comment => renderOneComment(comment)).join("");
 
 }
 
@@ -2588,6 +2609,65 @@ return;
 
 await loadDreamComments(currentDreamId);
 
+}
+
+
+async function toggleDreamReplyForm(commentId) {
+const form = document.getElementById("dreamReplyForm_" + commentId);
+if (!form) return;
+form.style.display = form.style.display === "none" ? "block" : "none";
+}
+
+
+async function addDreamReply(parentCommentId) {
+const input = document.getElementById("dreamReplyInput_" + parentCommentId);
+const content = input ? input.value.trim() : "";
+
+if (!content) {
+alert("Please write a reply first.");
+return;
+}
+
+if (content.length > 1000) {
+alert("Replies must be 1000 characters or fewer.");
+return;
+}
+
+const { data: userData } = await supabaseClient.auth.getUser();
+if (!userData.user) {
+alert("Please sign in to reply. 🔐");
+showPage("auth");
+return;
+}
+
+const form = document.getElementById("dreamReplyForm_" + parentCommentId);
+const button = form ? form.querySelector("button") : null;
+if (button) {
+button.disabled = true;
+button.textContent = "Sending...";
+}
+
+const { error } = await supabaseClient
+.from("dream_comments")
+.insert({
+dream_id: currentDreamId,
+parent_comment_id: parentCommentId,
+user_id: userData.user.id,
+content: content
+});
+
+if (button) {
+button.disabled = false;
+button.textContent = "Send Reply";
+}
+
+if (error) {
+console.error("Reply posting error:", error);
+alert("Unable to post reply: " + error.message);
+return;
+}
+
+await loadDreamComments(currentDreamId);
 }
 
 
