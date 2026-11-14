@@ -330,6 +330,10 @@ Dreams remembered. Stories preserved.
 🔔 Notifications <span id="notificationBadge" style="display:none;"></span>
 </button>
 
+<button onclick="showPage('online')">
+🟢 Online
+</button>
+
 <button onclick="showPage('profile')">
 👤 Profile
 </button>
@@ -1073,6 +1077,29 @@ See who is interacting with your dreams.
 </section>
 
   
+<!-- ONLINE DREAMERS -->
+
+<section id="online" class="page">
+
+<h2>🟢 Dreamers Online</h2>
+
+<p class="tagline">
+See who's here in The Dream Library right now.
+</p>
+
+<div class="card">
+  <div class="button-row" style="justify-content:space-between; align-items:center;">
+    <strong id="onlineSummary">Connecting...</strong>
+    <span class="meta">Live status</span>
+  </div>
+  <div id="onlineDreamersList">
+    <p class="empty">Connecting to the Dream Library...</p>
+  </div>
+</div>
+
+</section>
+
+
 <!-- PROFILE -->
 
 <section id="profile" class="page">
@@ -1293,6 +1320,8 @@ let currentDreamId = null;
 let editingDreamId = null;
 let notificationChannel = null;
 let dreamCommentsChannel = null;
+let presenceChannel = null;
+let onlineDreamers = [];
 
 
 /* ==================================================
@@ -1351,6 +1380,135 @@ if (pageId === "notifications") {
 loadNotifications();
 }
 
+}
+
+
+/* ==================================================
+   LIVE ONLINE PRESENCE
+   ================================================== */
+
+function renderOnlineDreamers() {
+  const summary = document.getElementById("onlineSummary");
+  const list = document.getElementById("onlineDreamersList");
+  if (!summary || !list) return;
+
+  const uniqueDreamers = [];
+  const seen = new Set();
+
+  onlineDreamers.forEach(function(dreamer) {
+    if (!dreamer.user_id || seen.has(dreamer.user_id)) return;
+    seen.add(dreamer.user_id);
+    uniqueDreamers.push(dreamer);
+  });
+
+  summary.textContent =
+    uniqueDreamers.length + " dreamer" +
+    (uniqueDreamers.length === 1 ? "" : "s") + " online";
+
+  if (!uniqueDreamers.length) {
+    list.innerHTML = "<p class='empty'>No other dreamers are online right now. Be the first! 🌙</p>";
+    return;
+  }
+
+  list.innerHTML = uniqueDreamers.map(function(dreamer) {
+    return `
+      <div class="dream-item" style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:24px;">🟢</span>
+        <div>
+          <strong>${escapeHTML(dreamer.display_name || "Anonymous Dreamer")}</strong>
+          <div class="meta">Online now</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+
+async function startPresence() {
+  const { data: userData } = await supabaseClient.auth.getUser();
+  const user = userData && userData.user;
+
+  if (!user) return;
+
+  if (presenceChannel) {
+    await supabaseClient.removeChannel(presenceChannel);
+    presenceChannel = null;
+  }
+
+  let displayName = "Anonymous Dreamer";
+  const { data: profile } = await supabaseClient
+    .from("profiles")
+    .select("display_name,pseudonym")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (profile) {
+    displayName = profile.display_name || profile.pseudonym || displayName;
+  }
+
+  presenceChannel = supabaseClient.channel("dream-library-online", {
+    config: {
+      presence: {
+        key: user.id
+      }
+    }
+  });
+
+  presenceChannel
+    .on("presence", { event: "sync" }, function() {
+      const state = presenceChannel.presenceState();
+      onlineDreamers = [];
+
+      Object.keys(state).forEach(function(key) {
+        (state[key] || []).forEach(function(session) {
+          onlineDreamers.push(session);
+        });
+      });
+
+      renderOnlineDreamers();
+    })
+    .on("presence", { event: "join" }, function() {
+      const state = presenceChannel.presenceState();
+      onlineDreamers = [];
+      Object.keys(state).forEach(function(key) {
+        (state[key] || []).forEach(function(session) {
+          onlineDreamers.push(session);
+        });
+      });
+      renderOnlineDreamers();
+    })
+    .on("presence", { event: "leave" }, function() {
+      const state = presenceChannel.presenceState();
+      onlineDreamers = [];
+      Object.keys(state).forEach(function(key) {
+        (state[key] || []).forEach(function(session) {
+          onlineDreamers.push(session);
+        });
+      });
+      renderOnlineDreamers();
+    })
+    .subscribe(async function(status) {
+      if (status === "SUBSCRIBED") {
+        await presenceChannel.track({
+          user_id: user.id,
+          display_name: displayName,
+          online_at: new Date().toISOString()
+        });
+        console.log("Dream Library online presence connected.");
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.warn("Online presence connection:", status);
+      }
+    });
+}
+
+
+async function stopPresence() {
+  if (presenceChannel) {
+    await supabaseClient.removeChannel(presenceChannel);
+    presenceChannel = null;
+  }
+  onlineDreamers = [];
+  renderOnlineDreamers();
 }
 
 
@@ -1747,6 +1905,7 @@ alert(
 
 loadNotificationBadge();
 startNotificationRealtime();
+startPresence();
 showPage("my-dreams");
 
 }
@@ -1755,6 +1914,7 @@ showPage("my-dreams");
 async function signOut() {
 
 await stopNotificationRealtime();
+await stopPresence();
 
 const { error } =
 await supabaseClient.auth.signOut();
@@ -4289,9 +4449,12 @@ dreamers.
 
 async function initializeApp() {
 
-await supabaseClient.auth.getUser();
+const { data: userData } = await supabaseClient.auth.getUser();
 
-startNotificationRealtime();
+if (userData && userData.user) {
+  startNotificationRealtime();
+  startPresence();
+}
 
 loadPublicDreams();
 
