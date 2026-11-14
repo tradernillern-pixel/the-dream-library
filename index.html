@@ -1363,6 +1363,7 @@ let currentConversationId = null;
 let currentChatPartnerId = null;
 let typingChannel = null;
 let typingTimer = null;
+let messageRealtimeChannel = null;
 let onlineDreamers = [];
 
 
@@ -1371,6 +1372,10 @@ let onlineDreamers = [];
    ================================================== */
 
 function showPage(pageId) {
+
+if (pageId !== "messages" && messageRealtimeChannel) {
+  stopMessageRealtime();
+}
 
 if (pageId !== "dream-details") {
 stopDreamCommentsRealtime();
@@ -1625,6 +1630,7 @@ async function openDirectConversation(conversationId, otherUserId) {
   document.getElementById("messageStatus").textContent = "";
   await loadDirectMessages();
   await startTypingRealtime(conversationId);
+  await startMessageRealtime(conversationId);
   document.getElementById("messageChatPanel").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -1689,6 +1695,45 @@ async function handleMessageTyping() {
     });
     typingTimer = null;
   }, 1200);
+}
+
+
+async function stopMessageRealtime() {
+  if (messageRealtimeChannel) {
+    await supabaseClient.removeChannel(messageRealtimeChannel);
+    messageRealtimeChannel = null;
+  }
+}
+
+
+async function startMessageRealtime(conversationId) {
+  await stopMessageRealtime();
+  if (!conversationId) return;
+
+  messageRealtimeChannel = supabaseClient
+    .channel("live-messages-" + conversationId)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: "conversation_id=eq." + conversationId
+      },
+      function(payload) {
+        if (currentConversationId === conversationId) {
+          loadDirectMessages();
+          loadConversations();
+        }
+      }
+    )
+    .subscribe(function(status) {
+      if (status === "SUBSCRIBED") {
+        console.log("Live messages connected.");
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.warn("Live messages connection issue:", status);
+      }
+    });
 }
 
 
@@ -1780,6 +1825,7 @@ async function sendDirectMessage() {
 
 function closeMessageChat() {
   stopTypingRealtime();
+  stopMessageRealtime();
   currentConversationId = null;
   currentChatPartnerId = null;
   document.getElementById("messageChatPanel").style.display = "none";
