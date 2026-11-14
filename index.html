@@ -335,7 +335,7 @@ Dreams remembered. Stories preserved.
 </button>
 
 <button onclick="showPage('messages')">
-💬 Messages
+💬 Messages <span id="messagesBadge" style="display:none;background:#e05252;color:white;border-radius:999px;padding:2px 7px;font-size:12px;margin-left:4px;"></span>
 </button>
 
 <button onclick="showPage('profile')">
@@ -1518,6 +1518,8 @@ async function loadConversations() {
   }))];
 
   if (!conversationIds.length) {
+    const badge = document.getElementById("messagesBadge");
+    if (badge) badge.style.display = "none";
     list.innerHTML = "<p class='empty'>No conversations yet. Search for a dreamer above to start one.</p>";
     return;
   }
@@ -1579,6 +1581,30 @@ async function loadConversations() {
     .in("conversation_id", conversationIds)
     .order("created_at", { ascending: false });
 
+  // Count unread incoming messages for each conversation.
+  const { data: unreadMessages, error: unreadError } = await supabaseClient
+    .from("messages")
+    .select("conversation_id")
+    .in("conversation_id", conversationIds)
+    .neq("sender_id", userData.user.id)
+    .is("read_at", null);
+
+  if (unreadError) {
+    console.warn("Unread message count error:", unreadError.message);
+  }
+
+  const unreadCounts = {};
+  (unreadMessages || []).forEach(function(message) {
+    unreadCounts[message.conversation_id] = (unreadCounts[message.conversation_id] || 0) + 1;
+  });
+
+  const totalUnread = (unreadMessages || []).length;
+  const messagesBadge = document.getElementById("messagesBadge");
+  if (messagesBadge) {
+    messagesBadge.textContent = totalUnread > 99 ? "99+" : String(totalUnread);
+    messagesBadge.style.display = totalUnread ? "inline-block" : "none";
+  }
+
   list.innerHTML = conversations.map(function(conversation) {
     const participant = (participants || []).find(function(row) {
       return row.conversation_id === conversation.id && row.user_id !== userData.user.id;
@@ -1593,10 +1619,17 @@ async function loadConversations() {
       return message.conversation_id === conversation.id;
     });
     const preview = latest ? latest.content : "Start your conversation";
+    const unreadCount = unreadCounts[conversation.id] || 0;
+    const unreadBadge = unreadCount
+      ? `<span style="display:inline-block;background:#239b62;color:white;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:bold;">${unreadCount > 99 ? "99+" : unreadCount}</span>`
+      : "";
 
     return `
       <div class="dream-item">
-        <strong>${escapeHTML(name)}</strong>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <strong>${escapeHTML(name)}</strong>
+          ${unreadBadge}
+        </div>
         <p class="meta">${escapeHTML(preview.slice(0, 90))}</p>
         <button class="save-button" onclick="openDirectConversation('${conversation.id}','${participant.user_id}')">Open Chat</button>
       </div>
