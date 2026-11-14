@@ -1105,8 +1105,9 @@ See who is interacting with your dreams.
     <button class="outline-button" onclick="closeMessageChat()">← Back to conversations</button>
   </div>
   <div id="messagesList" style="max-height:420px;overflow-y:auto;"></div>
+  <p id="typingStatus" class="meta" aria-live="polite" style="min-height:20px;"></p>
   <label for="messageInput">Write a message</label>
-  <textarea id="messageInput" rows="3" maxlength="5000" placeholder="Write your message..."></textarea>
+  <textarea id="messageInput" rows="3" maxlength="5000" placeholder="Write your message..." oninput="handleMessageTyping()"></textarea>
   <button class="save-button" onclick="sendDirectMessage()">Send Message ➤</button>
   <p id="messageStatus" class="meta"></p>
 </div>
@@ -1360,6 +1361,8 @@ let dreamCommentsChannel = null;
 let presenceChannel = null;
 let currentConversationId = null;
 let currentChatPartnerId = null;
+let typingChannel = null;
+let typingTimer = null;
 let onlineDreamers = [];
 
 
@@ -1621,7 +1624,71 @@ async function openDirectConversation(conversationId, otherUserId) {
   document.getElementById("messageChatPanel").style.display = "block";
   document.getElementById("messageStatus").textContent = "";
   await loadDirectMessages();
+  await startTypingRealtime(conversationId);
   document.getElementById("messageChatPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+
+async function stopTypingRealtime() {
+  if (typingTimer) {
+    clearTimeout(typingTimer);
+    typingTimer = null;
+  }
+  if (typingChannel) {
+    await supabaseClient.removeChannel(typingChannel);
+    typingChannel = null;
+  }
+  const status = document.getElementById("typingStatus");
+  if (status) status.textContent = "";
+}
+
+
+async function startTypingRealtime(conversationId) {
+  await stopTypingRealtime();
+
+  const { data: userData } = await supabaseClient.auth.getUser();
+  if (!userData.user || !conversationId) return;
+
+  const userId = userData.user.id;
+  typingChannel = supabaseClient
+    .channel("typing-" + conversationId)
+    .on("broadcast", { event: "typing" }, function(payload) {
+      const event = payload.payload || {};
+      if (event.user_id === userId) return;
+      const status = document.getElementById("typingStatus");
+      if (status && currentConversationId === conversationId) {
+        status.textContent = event.is_typing ? "Dreamer is typing..." : "";
+      }
+    })
+    .subscribe();
+}
+
+
+async function handleMessageTyping() {
+  if (!currentConversationId || !typingChannel) return;
+
+  const { data: userData } = await supabaseClient.auth.getUser();
+  if (!userData.user) return;
+
+  const channel = typingChannel;
+  const conversationId = currentConversationId;
+
+  await channel.send({
+    type: "broadcast",
+    event: "typing",
+    payload: { user_id: userData.user.id, is_typing: true }
+  });
+
+  if (typingTimer) clearTimeout(typingTimer);
+  typingTimer = setTimeout(async function() {
+    if (typingChannel !== channel || currentConversationId !== conversationId) return;
+    await channel.send({
+      type: "broadcast",
+      event: "typing",
+      payload: { user_id: userData.user.id, is_typing: false }
+    });
+    typingTimer = null;
+  }, 1200);
 }
 
 
@@ -1712,6 +1779,7 @@ async function sendDirectMessage() {
 
 
 function closeMessageChat() {
+  stopTypingRealtime();
   currentConversationId = null;
   currentChatPartnerId = null;
   document.getElementById("messageChatPanel").style.display = "none";
