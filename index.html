@@ -334,6 +334,10 @@ Dreams remembered. Stories preserved.
 🟢 Online
 </button>
 
+<button onclick="showPage('messages')">
+💬 Messages
+</button>
+
 <button onclick="showPage('profile')">
 👤 Profile
 </button>
@@ -1077,6 +1081,39 @@ See who is interacting with your dreams.
 </section>
 
   
+<!-- DIRECT MESSAGES -->
+
+<section id="messages" class="page">
+
+<h2>💬 Direct Messages</h2>
+<p class="tagline">Private conversations between dreamers.</p>
+
+<div class="card">
+  <h3>🔎 Find a Dreamer</h3>
+  <input id="dreamerSearchInput" type="search" placeholder="Search dreamer names..." oninput="searchDreamers()">
+  <div id="dreamerSearchResults"><p class="empty">Search for a dreamer to start a conversation.</p></div>
+</div>
+
+<div class="card">
+  <h3>💌 Your Conversations</h3>
+  <div id="conversationsList"><p class="empty">Your conversations will appear here.</p></div>
+</div>
+
+<div class="card" id="messageChatPanel" style="display:none;">
+  <div class="button-row" style="justify-content:space-between;align-items:center;">
+    <h3 id="messageChatTitle">Conversation</h3>
+    <button class="outline-button" onclick="closeMessageChat()">← Back to conversations</button>
+  </div>
+  <div id="messagesList" style="max-height:420px;overflow-y:auto;"></div>
+  <label for="messageInput">Write a message</label>
+  <textarea id="messageInput" rows="3" maxlength="5000" placeholder="Write your message..."></textarea>
+  <button class="save-button" onclick="sendDirectMessage()">Send Message ➤</button>
+  <p id="messageStatus" class="meta"></p>
+</div>
+
+</section>
+
+
 <!-- ONLINE DREAMERS -->
 
 <section id="online" class="page">
@@ -1378,6 +1415,10 @@ loadStatistics();
 
 if (pageId === "notifications") {
 loadNotifications();
+}
+
+if (pageId === "messages") {
+ loadConversations();
 }
 
 }
