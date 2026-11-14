@@ -1358,6 +1358,8 @@ let editingDreamId = null;
 let notificationChannel = null;
 let dreamCommentsChannel = null;
 let presenceChannel = null;
+let currentConversationId = null;
+let currentChatPartnerId = null;
 let onlineDreamers = [];
 
 
@@ -1421,6 +1423,298 @@ if (pageId === "messages") {
  loadConversations();
 }
 
+}
+
+
+/* ==================================================
+   DIRECT MESSAGING
+   ================================================== */
+
+async function searchDreamers() {
+  const input = document.getElementById("dreamerSearchInput");
+  const results = document.getElementById("dreamerSearchResults");
+  const term = input.value.trim();
+
+  if (term.length < 2) {
+    results.innerHTML = "<p class='empty'>Enter at least 2 characters to search.</p>";
+    return;
+  }
+
+  const { data: userData } = await supabaseClient.auth.getUser();
+  if (!userData.user) {
+    results.innerHTML = "<p class='empty'>Please sign in to find dreamers.</p>";
+    return;
+  }
+
+  results.innerHTML = "<p class='empty'>Searching...</p>";
+
+  const safeTerm = term.replace(/[,%()]/g, " ").trim();
+  const { data, error } = await supabaseClient
+    .from("public_dreamer_profiles")
+    .select("user_id,display_name,pseudonym,avatar_url")
+    .or("display_name.ilike.%"+safeTerm+"%,pseudonym.ilike.%"+safeTerm+"%")
+    .limit(20);
+
+  if (error) {
+    console.error("Dreamer search error:", error);
+    results.innerHTML = "<p class='empty'>Unable to search dreamers right now.</p>";
+    return;
+  }
+
+  const dreamers = (data || []).filter(function(person) {
+    return person.user_id !== userData.user.id;
+  });
+
+  if (!dreamers.length) {
+    results.innerHTML = "<p class='empty'>No other dreamers found.</p>";
+    return;
+  }
+
+  results.innerHTML = dreamers.map(function(person) {
+    const name = person.display_name || person.pseudonym || "Anonymous Dreamer";
+    return `
+      <div class="dream-item" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <strong>${escapeHTML(name)}</strong>
+        <button class="save-button" onclick="startDirectConversation('${person.user_id}')">Message</button>
+      </div>
+    `;
+  }).join("");
+}
+
+
+async function loadConversations() {
+  const list = document.getElementById("conversationsList");
+  const { data: userData } = await supabaseClient.auth.getUser();
+
+  if (!userData.user) {
+    list.innerHTML = "<p class='empty'>🔐 Please sign in to use Direct Messages.</p>";
+    document.getElementById("messageChatPanel").style.display = "none";
+    return;
+  }
+
+  list.innerHTML = "<p class='empty'>Loading conversations...</p>";
+
+  const { data: memberships, error: membershipError } = await supabaseClient
+    .from("conversation_participants")
+    .select("conversation_id")
+    .eq("user_id", userData.user.id);
+
+  if (membershipError) {
+    console.error("Conversation list error:", membershipError);
+    list.innerHTML = "<p class='empty'>Unable to load conversations.</p>";
+    return;
+  }
+
+  const conversationIds = [...new Set((memberships || []).map(function(row) {
+    return row.conversation_id;
+  }))];
+
+  if (!conversationIds.length) {
+    list.innerHTML = "<p class='empty'>No conversations yet. Search for a dreamer above to start one.</p>";
+    return;
+  }
+
+  const { data: conversations, error: conversationError } = await supabaseClient
+    .from("conversations")
+    .select("id,created_at")
+    .in("id", conversationIds)
+    .order("created_at", { ascending: false });
+
+  if (conversationError) {
+    console.error("Conversation details error:", conversationError);
+    list.innerHTML = "<p class='empty'>Unable to load conversations.</p>";
+    return;
+  }
+
+  const { data: participants, error: participantsError } = await supabaseClient
+    .from("conversation_participants")
+    .select("conversation_id,user_id")
+    .in("conversation_id", conversationIds);
+
+  if (participantsError) {
+    console.error("Conversation participants error:", participantsError);
+    list.innerHTML = "<p class='empty'>Unable to load conversation members.</p>";
+    return;
+  }
+
+  const partnerIds = [...new Set((participants || [])
+    .filter(function(row) { return row.user_id !== userData.user.id; })
+    .map(function(row) { return row.user_id; }))];
+
+  const { data: profiles, error: profilesError } = await supabaseClient
+    .from("public_dreamer_profiles")
+    .select("user_id,display_name,pseudonym")
+    .in("user_id", partnerIds);
+
+  if (profilesError) {
+    console.error("Conversation profiles error:", profilesError);
+    list.innerHTML = "<p class='empty'>Unable to load dreamer names.</p>";
+    return;
+  }
+
+  const { data: recentMessages } = await supabaseClient
+    .from("messages")
+    .select("conversation_id,content,created_at,sender_id")
+    .in("conversation_id", conversationIds)
+    .order("created_at", { ascending: false });
+
+  list.innerHTML = conversations.map(function(conversation) {
+    const participant = (participants || []).find(function(row) {
+      return row.conversation_id === conversation.id && row.user_id !== userData.user.id;
+    });
+    if (!participant) return "";
+
+    const profile = (profiles || []).find(function(row) {
+      return row.user_id === participant.user_id;
+    });
+    const name = profile ? (profile.display_name || profile.pseudonym || "Anonymous Dreamer") : "Dreamer";
+    const latest = (recentMessages || []).find(function(message) {
+      return message.conversation_id === conversation.id;
+    });
+    const preview = latest ? latest.content : "Start your conversation";
+
+    return `
+      <div class="dream-item">
+        <strong>${escapeHTML(name)}</strong>
+        <p class="meta">${escapeHTML(preview.slice(0, 90))}</p>
+        <button class="save-button" onclick="openDirectConversation('${conversation.id}','${participant.user_id}')">Open Chat</button>
+      </div>
+    `;
+  }).join("") || "<p class='empty'>No conversations yet.</p>";
+}
+
+
+async function startDirectConversation(otherUserId) {
+  const { data: userData } = await supabaseClient.auth.getUser();
+  if (!userData.user) {
+    alert("Please sign in to send a message.");
+    showPage("auth");
+    return;
+  }
+
+  const { data: conversationId, error } = await supabaseClient
+    .rpc("create_direct_conversation", { _other_user_id: otherUserId });
+
+  if (error) {
+    console.error("Create conversation error:", error);
+    alert("Unable to start conversation: " + error.message);
+    return;
+  }
+
+  await openDirectConversation(conversationId, otherUserId);
+  await loadConversations();
+}
+
+
+async function openDirectConversation(conversationId, otherUserId) {
+  currentConversationId = conversationId;
+  currentChatPartnerId = otherUserId;
+
+  const { data: profile } = await supabaseClient
+    .from("public_dreamer_profiles")
+    .select("display_name,pseudonym")
+    .eq("user_id", otherUserId)
+    .maybeSingle();
+
+  const name = profile ? (profile.display_name || profile.pseudonym || "Dreamer") : "Dreamer";
+  document.getElementById("messageChatTitle").textContent = "💬 " + name;
+  document.getElementById("messageChatPanel").style.display = "block";
+  document.getElementById("messageStatus").textContent = "";
+  await loadDirectMessages();
+  document.getElementById("messageChatPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+
+async function loadDirectMessages() {
+  const list = document.getElementById("messagesList");
+  if (!currentConversationId) return;
+
+  const { data, error } = await supabaseClient
+    .from("messages")
+    .select("id,sender_id,content,created_at")
+    .eq("conversation_id", currentConversationId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Load messages error:", error);
+    list.innerHTML = "<p class='empty'>Unable to load messages.</p>";
+    return;
+  }
+
+  const { data: userData } = await supabaseClient.auth.getUser();
+  list.innerHTML = (data || []).map(function(message) {
+    const mine = userData.user && message.sender_id === userData.user.id;
+    const time = new Date(message.created_at).toLocaleString();
+    return `
+      <div style="display:flex;justify-content:${mine ? "flex-end" : "flex-start"};margin:10px 0;">
+        <div style="max-width:85%;padding:12px 15px;border-radius:12px;background:${mine ? "#1c5d9f" : "#102845"};border:1px solid #35577f;">
+          <p style="margin:0;white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHTML(message.content)}</p>
+          <small class="meta">${mine ? "You" : "Dreamer"} · ${escapeHTML(time)}</small>
+        </div>
+      </div>
+    `;
+  }).join("") || "<p class='empty'>Say hello and start the conversation. 🌙</p>";
+
+  list.scrollTop = list.scrollHeight;
+}
+
+
+async function sendDirectMessage() {
+  const input = document.getElementById("messageInput");
+  const status = document.getElementById("messageStatus");
+  const content = input.value.trim();
+
+  if (!currentConversationId) {
+    status.textContent = "Open a conversation first.";
+    return;
+  }
+  if (!content) {
+    status.textContent = "Write a message first.";
+    return;
+  }
+  if (content.length > 5000) {
+    status.textContent = "Messages must be 5000 characters or fewer.";
+    return;
+  }
+
+  const { data: userData } = await supabaseClient.auth.getUser();
+  if (!userData.user) {
+    status.textContent = "Please sign in again.";
+    return;
+  }
+
+  const button = document.querySelector("#messageChatPanel button.save-button");
+  button.disabled = true;
+  button.textContent = "Sending...";
+
+  const { error } = await supabaseClient
+    .from("messages")
+    .insert({
+      conversation_id: currentConversationId,
+      sender_id: userData.user.id,
+      content: content
+    });
+
+  button.disabled = false;
+  button.textContent = "Send Message ➤";
+
+  if (error) {
+    console.error("Send message error:", error);
+    status.textContent = "Unable to send message: " + error.message;
+    return;
+  }
+
+  input.value = "";
+  status.textContent = "Message sent.";
+  await loadDirectMessages();
+  await loadConversations();
+}
+
+
+function closeMessageChat() {
+  currentConversationId = null;
+  currentChatPartnerId = null;
+  document.getElementById("messageChatPanel").style.display = "none";
 }
 
 
