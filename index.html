@@ -2688,17 +2688,36 @@ notice.textContent = "";
 const { data: userData } = await supabaseClient.auth.getUser();
 const currentUser = userData?.user || null;
 
-const { data: comments, error } = await supabaseClient
+let repliesEnabled = true;
+
+let { data: comments, error } = await supabaseClient
 .from("dream_comments")
 .select("id,dream_id,user_id,content,created_at,parent_comment_id")
 .eq("dream_id", dreamId)
 .order("created_at", { ascending: true });
+
+// If the database migration has not been run yet, keep normal comments working.
+if (error && String(error.message || "").includes("parent_comment_id")) {
+repliesEnabled = false;
+const fallback = await supabaseClient
+.from("dream_comments")
+.select("id,dream_id,user_id,content,created_at")
+.eq("dream_id", dreamId)
+.order("created_at", { ascending: true });
+
+comments = fallback.data;
+error = fallback.error;
+}
 
 if (error) {
 console.error("Comments loading error:", error);
 list.innerHTML = "<p class='empty'>Unable to load comments. Please refresh and try again.</p>";
 if (form) form.style.display = currentUser ? "block" : "none";
 return;
+}
+
+if (!repliesEnabled && currentUser) {
+notice.textContent = "Your comments are available. Reply threads will appear after the database update is complete.";
 }
 
 if (!comments || comments.length === 0) {
@@ -2727,14 +2746,19 @@ profileMap[profile.user_id] =
 profile.display_name || profile.pseudonym || "Anonymous Dreamer";
 });
 
-const topLevelComments = comments.filter(comment => !comment.parent_comment_id);
+const topLevelComments = repliesEnabled
+? comments.filter(comment => !comment.parent_comment_id)
+: comments;
 const repliesByParent = {};
+
+if (repliesEnabled) {
 comments.filter(comment => comment.parent_comment_id).forEach(reply => {
 if (!repliesByParent[reply.parent_comment_id]) {
 repliesByParent[reply.parent_comment_id] = [];
 }
 repliesByParent[reply.parent_comment_id].push(reply);
 });
+}
 
 const renderOneComment = (comment, isReply = false) => {
 const author = profileMap[comment.user_id] || "Anonymous Dreamer";
@@ -2747,10 +2771,10 @@ return `
 <small class="meta" style="display:block;">${escapeHTML(date)}</small>
 <p style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHTML(comment.content)}</p>
 <div class="button-row">
-${!isReply && currentUser ? `<button class="outline-button" onclick="toggleDreamReplyForm('${comment.id}')">↩️ Reply</button>` : ""}
+${!isReply && currentUser && repliesEnabled ? `<button class="outline-button" onclick="toggleDreamReplyForm('${comment.id}')">↩️ Reply</button>` : ""}
 ${ownComment ? `<button class="outline-button" onclick="deleteDreamComment('${comment.id}')">🗑️ Delete</button>` : ""}
 </div>
-${!isReply && currentUser ? `
+${!isReply && currentUser && repliesEnabled ? `
 <div id="dreamReplyForm_${comment.id}" style="display:none;margin-top:10px;">
 <textarea id="dreamReplyInput_${comment.id}" maxlength="1000" rows="2" placeholder="Write a reply..."></textarea>
 <button class="save-button" onclick="addDreamReply('${comment.id}')" style="margin-top:8px;">Send Reply</button>
