@@ -1789,7 +1789,7 @@ async function loadDirectMessages() {
 
   const { data, error } = await supabaseClient
     .from("messages")
-    .select("id,sender_id,content,created_at,delivered_at,read_at")
+    .select("id,sender_id,content,created_at,delivered_at,read_at,deleted_at")
     .eq("conversation_id", currentConversationId)
     .order("created_at", { ascending: true });
 
@@ -1803,16 +1803,24 @@ async function loadDirectMessages() {
   list.innerHTML = (data || []).map(function(message) {
     const mine = userData.user && message.sender_id === userData.user.id;
     const time = new Date(message.created_at).toLocaleString();
-    const receipt = !mine ? "" : message.read_at
+    const deleted = Boolean(message.deleted_at);
+    const receipt = !mine || deleted ? "" : message.read_at
       ? '<span title="Read" style="color:#55baff;font-weight:bold;">✓✓</span>'
       : message.delivered_at
         ? '<span title="Delivered" style="color:#c8d7e8;font-weight:bold;">✓✓</span>'
         : '<span title="Sent" style="color:#c8d7e8;">✓</span>';
+    const messageBody = deleted
+      ? '<p style="margin:0;font-style:italic;opacity:.75;">This message was deleted.</p>'
+      : `<p style="margin:0;white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHTML(message.content)}</p>`;
+    const deleteButton = mine && !deleted
+      ? `<button class="outline-button" style="margin-top:6px;padding:4px 8px;font-size:12px;" onclick="deleteDirectMessage('${message.id}')">Delete</button>`
+      : "";
     return `
       <div style="display:flex;justify-content:${mine ? "flex-end" : "flex-start"};margin:10px 0;">
         <div style="max-width:85%;padding:12px 15px;border-radius:12px;background:${mine ? "#1c5d9f" : "#102845"};border:1px solid #35577f;">
-          <p style="margin:0;white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHTML(message.content)}</p>
+          ${messageBody}
           <small class="meta">${mine ? "You" : "Dreamer"} · ${escapeHTML(time)} ${receipt}</small>
+          ${deleteButton}
         </div>
       </div>
     `;
@@ -1832,6 +1840,29 @@ async function loadDirectMessages() {
   if (readError) {
     console.warn("Read receipt update:", readError.message);
   }
+}
+
+
+async function deleteDirectMessage(messageId) {
+  if (!messageId || !confirm("Delete this message for everyone?")) return;
+
+  const { data: userData } = await supabaseClient.auth.getUser();
+  if (!userData.user) return;
+
+  const { error } = await supabaseClient
+    .from("messages")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", messageId)
+    .eq("sender_id", userData.user.id);
+
+  if (error) {
+    console.error("Delete message error:", error);
+    alert("Unable to delete this message. Please try again.");
+    return;
+  }
+
+  await loadDirectMessages();
+  await loadConversations();
 }
 
 
