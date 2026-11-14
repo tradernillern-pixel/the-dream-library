@@ -1109,10 +1109,11 @@ See who is interacting with your dreams.
   <label for="messageInput">Write a message</label>
   <textarea id="messageInput" rows="3" maxlength="5000" placeholder="Write your message..." oninput="handleMessageTyping()"></textarea>
   <div class="button-row" style="align-items:center;gap:10px;flex-wrap:wrap;">
-    <input type="file" id="chatImageInput" accept="image/*" style="max-width:100%;">
-    <button type="button" class="outline-button" id="sendChatImageButton" onclick="sendChatImage()">📷 Send Photo</button>
-    <button type="button" class="save-button" id="sendMessageButton" onclick="sendDirectMessage()">Send Message ➤</button>
+    <label for="chatImageInput" class="outline-button" style="display:inline-block;cursor:pointer;margin:0;">📎 Attach photo</label>
+    <input type="file" id="chatImageInput" accept="image/*" style="display:none;" onchange="showChatImageSelection()">
+    <button type="button" class="save-button" id="sendMessageButton" onclick="sendDirectMessage()">Send ➤</button>
   </div>
+  <p id="chatImageSelection" class="meta"></p>
   <p id="messageStatus" class="meta"></p>
 </div>
 
@@ -1888,24 +1889,38 @@ async function deleteDirectMessage(messageId) {
 }
 
 
-async function sendChatImage() {
+function showChatImageSelection() {
   const input = document.getElementById("chatImageInput");
-  const status = document.getElementById("messageStatus");
+  const label = document.getElementById("chatImageSelection");
   const file = input.files && input.files[0];
+  if (label) label.textContent = file ? "📷 " + file.name + " selected" : "";
+}
+
+
+async function sendDirectMessage() {
+  const input = document.getElementById("messageInput");
+  const imageInput = document.getElementById("chatImageInput");
+  const status = document.getElementById("messageStatus");
+  const content = input.value.trim();
+  const file = imageInput.files && imageInput.files[0];
 
   if (!currentConversationId) {
     status.textContent = "Open a conversation first.";
     return;
   }
-  if (!file) {
-    status.textContent = "Choose an image first.";
+  if (!content && !file) {
+    status.textContent = "Write a message or attach a photo first.";
     return;
   }
-  if (!file.type || !file.type.startsWith("image/")) {
+  if (content.length > 5000) {
+    status.textContent = "Messages must be 5000 characters or fewer.";
+    return;
+  }
+  if (file && (!file.type || !file.type.startsWith("image/"))) {
     status.textContent = "Please choose a valid image file.";
     return;
   }
-  if (file.size > 5 * 1024 * 1024) {
+  if (file && file.size > 5 * 1024 * 1024) {
     status.textContent = "Images must be 5 MB or smaller.";
     return;
   }
@@ -1916,105 +1931,66 @@ async function sendChatImage() {
     return;
   }
 
-  const button = document.getElementById("sendChatImageButton");
-  button.disabled = true;
-  button.textContent = "Uploading...";
-
-  const extension = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const filePath = currentConversationId + "/" + userData.user.id + "/" + Date.now() + "." + extension;
-
-  const { error: uploadError } = await supabaseClient.storage
-    .from("chat-images")
-    .upload(filePath, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type
-    });
-
-  if (uploadError) {
-    console.error("Chat image upload error:", uploadError);
-    status.textContent = "Image upload failed: " + uploadError.message;
-    button.disabled = false;
-    button.textContent = "📷 Send Photo";
-    return;
-  }
-
-  const { error: messageError } = await supabaseClient
-    .from("messages")
-    .insert({
-      conversation_id: currentConversationId,
-      sender_id: userData.user.id,
-      content: "CHAT_IMAGE:" + filePath
-    });
-
-  if (messageError) {
-    console.error("Chat image message error:", messageError);
-    status.textContent = "Image uploaded but could not be sent: " + messageError.message;
-    button.disabled = false;
-    button.textContent = "📷 Send Photo";
-    return;
-  }
-
-  input.value = "";
-  status.textContent = "Photo sent.";
-  button.disabled = false;
-  button.textContent = "📷 Send Photo";
-  await loadDirectMessages();
-  await loadConversations();
-}
-
-
-async function sendDirectMessage() {
-  const input = document.getElementById("messageInput");
-  const status = document.getElementById("messageStatus");
-  const content = input.value.trim();
-
-  if (!currentConversationId) {
-    status.textContent = "Open a conversation first.";
-    return;
-  }
-  if (!content) {
-    status.textContent = "Write a message first.";
-    return;
-  }
-  if (content.length > 5000) {
-    status.textContent = "Messages must be 5000 characters or fewer.";
-    return;
-  }
-
-  const { data: userData } = await supabaseClient.auth.getUser();
-  if (!userData.user) {
-    status.textContent = "Please sign in again.";
-    return;
-  }
-
-  const button = document.querySelector("#messageChatPanel button.save-button");
+  const button = document.getElementById("sendMessageButton");
   button.disabled = true;
   button.textContent = "Sending...";
 
-  const { error } = await supabaseClient
-    .from("messages")
-    .insert({
-      conversation_id: currentConversationId,
-      sender_id: userData.user.id,
-      content: content
-    });
+  let sendError = null;
+
+  if (file) {
+    const extension = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const filePath = currentConversationId + "/" + userData.user.id + "/" + Date.now() + "." + extension;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from("chat-images")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type
+      });
+
+    if (uploadError) {
+      sendError = uploadError;
+    } else {
+      const { error: imageMessageError } = await supabaseClient
+        .from("messages")
+        .insert({
+          conversation_id: currentConversationId,
+          sender_id: userData.user.id,
+          content: "CHAT_IMAGE:" + filePath
+        });
+      if (imageMessageError) sendError = imageMessageError;
+    }
+  }
+
+  if (!sendError && content) {
+    const { error: textError } = await supabaseClient
+      .from("messages")
+      .insert({
+        conversation_id: currentConversationId,
+        sender_id: userData.user.id,
+        content: content
+      });
+    if (textError) sendError = textError;
+  }
 
   button.disabled = false;
-  button.textContent = "Send Message ➤";
+  button.textContent = "Send ➤";
 
-  if (error) {
-    console.error("Send message error:", error);
-    status.textContent = "Unable to send message: " + error.message;
+  if (sendError) {
+    console.error("Send message error:", sendError);
+    status.textContent = "Unable to send: " + sendError.message;
     return;
   }
 
   input.value = "";
-  status.textContent = "Message sent.";
+  imageInput.value = "";
+  const selection = document.getElementById("chatImageSelection");
+  if (selection) selection.textContent = "";
+  status.textContent = "Sent.";
   await loadDirectMessages();
   await loadConversations();
 }
-
 
 function closeMessageChat() {
   stopTypingRealtime();
