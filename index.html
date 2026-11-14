@@ -1292,6 +1292,7 @@ let currentDreamId = null;
 
 let editingDreamId = null;
 let notificationChannel = null;
+let dreamCommentsChannel = null;
 
 
 /* ==================================================
@@ -1299,6 +1300,10 @@ let notificationChannel = null;
    ================================================== */
 
 function showPage(pageId) {
+
+if (pageId !== "dream-details") {
+stopDreamCommentsRealtime();
+}
 
 document
 .querySelectorAll(".page")
@@ -1344,6 +1349,60 @@ loadStatistics();
 
 if (pageId === "notifications") {
 loadNotifications();
+}
+
+}
+
+
+/* ==================================================
+   LIVE DREAM COMMENTS
+   ================================================== */
+
+async function startDreamCommentsRealtime(dreamId) {
+
+if (!dreamId) return;
+
+if (dreamCommentsChannel) {
+await supabaseClient.removeChannel(dreamCommentsChannel);
+dreamCommentsChannel = null;
+}
+
+dreamCommentsChannel = supabaseClient
+.channel("live-dream-comments-" + dreamId)
+.on(
+"postgres_changes",
+{
+event: "INSERT",
+schema: "public",
+table: "dream_comments",
+filter: "dream_id=eq." + dreamId
+},
+function(payload) {
+if (
+currentDreamId === dreamId &&
+document.getElementById("dream-details")?.classList.contains("active")
+) {
+loadDreamComments(dreamId);
+}
+}
+)
+.subscribe(function(status) {
+if (status === "SUBSCRIBED") {
+console.log("Live dream comments connected.");
+}
+if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+console.warn("Live dream comments connection:", status);
+}
+});
+
+}
+
+
+async function stopDreamCommentsRealtime() {
+
+if (dreamCommentsChannel) {
+await supabaseClient.removeChannel(dreamCommentsChannel);
+dreamCommentsChannel = null;
 }
 
 }
@@ -2666,6 +2725,7 @@ showPage(
 );
 
 loadDreamComments(dream.id);
+startDreamCommentsRealtime(dream.id);
 
 }
 
