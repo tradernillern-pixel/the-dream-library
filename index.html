@@ -1450,7 +1450,7 @@ async function searchDreamers() {
 
   const safeTerm = term.replace(/[,%()]/g, " ").trim();
   const { data, error } = await supabaseClient
-    .from("public_dreamer_profiles")
+    .from("profiles")
     .select("user_id,display_name,pseudonym,avatar_url")
     .or("display_name.ilike.%"+safeTerm+"%,pseudonym.ilike.%"+safeTerm+"%")
     .limit(20);
@@ -1542,7 +1542,7 @@ async function loadConversations() {
     .map(function(row) { return row.user_id; }))];
 
   const { data: profiles, error: profilesError } = await supabaseClient
-    .from("public_dreamer_profiles")
+    .from("profiles")
     .select("user_id,display_name,pseudonym")
     .in("user_id", partnerIds);
 
@@ -1611,7 +1611,7 @@ async function openDirectConversation(conversationId, otherUserId) {
   currentChatPartnerId = otherUserId;
 
   const { data: profile } = await supabaseClient
-    .from("public_dreamer_profiles")
+    .from("profiles")
     .select("display_name,pseudonym")
     .eq("user_id", otherUserId)
     .maybeSingle();
@@ -4512,7 +4512,7 @@ async function viewDreamer(
   const { data: profile, error } =
     await supabaseClient
       .from(
-        "public_dreamer_profiles"
+        "profiles"
       )
       .select("*")
       .eq(
