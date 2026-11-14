@@ -1560,9 +1560,22 @@ async function loadConversations() {
     return;
   }
 
+  // Mark incoming messages as delivered when the recipient's app loads their conversations.
+  const deliveryTime = new Date().toISOString();
+  const { error: deliveryError } = await supabaseClient
+    .from("messages")
+    .update({ delivered_at: deliveryTime })
+    .in("conversation_id", conversationIds)
+    .neq("sender_id", userData.user.id)
+    .is("delivered_at", null);
+
+  if (deliveryError) {
+    console.warn("Message delivery receipt update:", deliveryError.message);
+  }
+
   const { data: recentMessages } = await supabaseClient
     .from("messages")
-    .select("conversation_id,content,created_at,sender_id")
+    .select("conversation_id,content,created_at,sender_id,delivered_at,read_at")
     .in("conversation_id", conversationIds)
     .order("created_at", { ascending: false });
 
@@ -1715,7 +1728,7 @@ async function startMessageRealtime(conversationId) {
     .on(
       "postgres_changes",
       {
-        event: "INSERT",
+        event: "*",
         schema: "public",
         table: "messages",
         filter: "conversation_id=eq." + conversationId
@@ -1743,7 +1756,7 @@ async function loadDirectMessages() {
 
   const { data, error } = await supabaseClient
     .from("messages")
-    .select("id,sender_id,content,created_at")
+    .select("id,sender_id,content,created_at,delivered_at,read_at")
     .eq("conversation_id", currentConversationId)
     .order("created_at", { ascending: true });
 
@@ -1757,17 +1770,35 @@ async function loadDirectMessages() {
   list.innerHTML = (data || []).map(function(message) {
     const mine = userData.user && message.sender_id === userData.user.id;
     const time = new Date(message.created_at).toLocaleString();
+    const receipt = !mine ? "" : message.read_at
+      ? '<span title="Read" style="color:#55baff;font-weight:bold;">✓✓</span>'
+      : message.delivered_at
+        ? '<span title="Delivered" style="color:#c8d7e8;font-weight:bold;">✓✓</span>'
+        : '<span title="Sent" style="color:#c8d7e8;">✓</span>';
     return `
       <div style="display:flex;justify-content:${mine ? "flex-end" : "flex-start"};margin:10px 0;">
         <div style="max-width:85%;padding:12px 15px;border-radius:12px;background:${mine ? "#1c5d9f" : "#102845"};border:1px solid #35577f;">
           <p style="margin:0;white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHTML(message.content)}</p>
-          <small class="meta">${mine ? "You" : "Dreamer"} · ${escapeHTML(time)}</small>
+          <small class="meta">${mine ? "You" : "Dreamer"} · ${escapeHTML(time)} ${receipt}</small>
         </div>
       </div>
     `;
   }).join("") || "<p class='empty'>Say hello and start the conversation. 🌙</p>";
 
   list.scrollTop = list.scrollHeight;
+
+  // Opening a conversation marks incoming messages as read.
+  const nowRead = new Date().toISOString();
+  const { error: readError } = await supabaseClient
+    .from("messages")
+    .update({ delivered_at: nowRead, read_at: nowRead })
+    .eq("conversation_id", currentConversationId)
+    .neq("sender_id", userData.user.id)
+    .is("read_at", null);
+
+  if (readError) {
+    console.warn("Read receipt update:", readError.message);
+  }
 }
 
 
