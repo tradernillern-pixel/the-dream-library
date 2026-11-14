@@ -1108,7 +1108,11 @@ See who is interacting with your dreams.
   <p id="typingStatus" class="meta" aria-live="polite" style="min-height:20px;"></p>
   <label for="messageInput">Write a message</label>
   <textarea id="messageInput" rows="3" maxlength="5000" placeholder="Write your message..." oninput="handleMessageTyping()"></textarea>
-  <button class="save-button" onclick="sendDirectMessage()">Send Message ➤</button>
+  <div class="button-row" style="align-items:center;gap:10px;flex-wrap:wrap;">
+    <input type="file" id="chatImageInput" accept="image/*" style="max-width:100%;">
+    <button type="button" class="outline-button" id="sendChatImageButton" onclick="sendChatImage()">📷 Send Photo</button>
+    <button type="button" class="save-button" id="sendMessageButton" onclick="sendDirectMessage()">Send Message ➤</button>
+  </div>
   <p id="messageStatus" class="meta"></p>
 </div>
 
@@ -1800,48 +1804,66 @@ async function loadDirectMessages() {
   }
 
   const { data: userData } = await supabaseClient.auth.getUser();
-  list.innerHTML = (data || []).map(function(message) {
-    const mine = userData.user && message.sender_id === userData.user.id;
+  const userId = userData.user && userData.user.id;
+
+  const renderedMessages = await Promise.all((data || []).map(async function(message) {
+    const mine = userId && message.sender_id === userId;
     const time = new Date(message.created_at).toLocaleString();
     const deleted = Boolean(message.deleted_at);
+    const isImage = !deleted && typeof message.content === "string" && message.content.startsWith("CHAT_IMAGE:");
+    let messageBody = "";
+
+    if (deleted) {
+      messageBody = '<p style="margin:0;font-style:italic;opacity:.75;">This message was deleted.</p>';
+    } else if (isImage) {
+      const imagePath = message.content.slice("CHAT_IMAGE:".length);
+      const { data: signedData, error: signedError } = await supabaseClient.storage
+        .from("chat-images")
+        .createSignedUrl(imagePath, 3600);
+
+      if (signedError || !signedData || !signedData.signedUrl) {
+        console.warn("Chat image URL error:", signedError);
+        messageBody = '<p style="margin:0;">📷 Image unavailable.</p>';
+      } else {
+        const safeUrl = escapeHTML(signedData.signedUrl);
+        messageBody = '<a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer"><img src="' + safeUrl + '" alt="Shared chat image" loading="lazy" style="display:block;max-width:100%;max-height:320px;object-fit:contain;border-radius:10px;"></a>';
+      }
+    } else {
+      messageBody = '<p style="margin:0;white-space:pre-wrap;overflow-wrap:anywhere;">' + escapeHTML(message.content) + '</p>';
+    }
+
     const receipt = !mine || deleted ? "" : message.read_at
       ? '<span title="Read" style="color:#55baff;font-weight:bold;">✓✓</span>'
       : message.delivered_at
         ? '<span title="Delivered" style="color:#c8d7e8;font-weight:bold;">✓✓</span>'
         : '<span title="Sent" style="color:#c8d7e8;">✓</span>';
-    const messageBody = deleted
-      ? '<p style="margin:0;font-style:italic;opacity:.75;">This message was deleted.</p>'
-      : `<p style="margin:0;white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHTML(message.content)}</p>`;
     const deleteButton = mine && !deleted
-      ? `<button class="outline-button" style="margin-top:6px;padding:4px 8px;font-size:12px;" onclick="deleteDirectMessage('${message.id}')">Delete</button>`
+      ? '<button class="outline-button" style="margin-top:6px;padding:4px 8px;font-size:12px;" onclick="deleteDirectMessage(\'' + message.id + '\')">Delete</button>'
       : "";
-    return `
-      <div style="display:flex;justify-content:${mine ? "flex-end" : "flex-start"};margin:10px 0;">
-        <div style="max-width:85%;padding:12px 15px;border-radius:12px;background:${mine ? "#1c5d9f" : "#102845"};border:1px solid #35577f;">
-          ${messageBody}
-          <small class="meta">${mine ? "You" : "Dreamer"} · ${escapeHTML(time)} ${receipt}</small>
-          ${deleteButton}
-        </div>
-      </div>
-    `;
-  }).join("") || "<p class='empty'>Say hello and start the conversation. 🌙</p>";
 
+    return '<div style="display:flex;justify-content:' + (mine ? "flex-end" : "flex-start") + ';margin:10px 0;">' +
+      '<div style="max-width:85%;padding:12px 15px;border-radius:12px;background:' + (mine ? "#1c5d9f" : "#102845") + ';border:1px solid #35577f;">' +
+      messageBody +
+      '<small class="meta">' + (mine ? "You" : "Dreamer") + ' · ' + escapeHTML(time) + ' ' + receipt + '</small>' +
+      deleteButton +
+      '</div></div>';
+  }));
+
+  list.innerHTML = renderedMessages.join("") || "<p class='empty'>Say hello and start the conversation. 🌙</p>";
   list.scrollTop = list.scrollHeight;
 
-  // Opening a conversation marks incoming messages as read.
-  const nowRead = new Date().toISOString();
-  const { error: readError } = await supabaseClient
-    .from("messages")
-    .update({ delivered_at: nowRead, read_at: nowRead })
-    .eq("conversation_id", currentConversationId)
-    .neq("sender_id", userData.user.id)
-    .is("read_at", null);
+  if (userId) {
+    const nowRead = new Date().toISOString();
+    const { error: readError } = await supabaseClient
+      .from("messages")
+      .update({ delivered_at: nowRead, read_at: nowRead })
+      .eq("conversation_id", currentConversationId)
+      .neq("sender_id", userId)
+      .is("read_at", null);
 
-  if (readError) {
-    console.warn("Read receipt update:", readError.message);
+    if (readError) console.warn("Read receipt update:", readError.message);
   }
 }
-
 
 async function deleteDirectMessage(messageId) {
   if (!messageId || !confirm("Delete this message for everyone?")) return;
@@ -1861,6 +1883,82 @@ async function deleteDirectMessage(messageId) {
     return;
   }
 
+  await loadDirectMessages();
+  await loadConversations();
+}
+
+
+async function sendChatImage() {
+  const input = document.getElementById("chatImageInput");
+  const status = document.getElementById("messageStatus");
+  const file = input.files && input.files[0];
+
+  if (!currentConversationId) {
+    status.textContent = "Open a conversation first.";
+    return;
+  }
+  if (!file) {
+    status.textContent = "Choose an image first.";
+    return;
+  }
+  if (!file.type || !file.type.startsWith("image/")) {
+    status.textContent = "Please choose a valid image file.";
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    status.textContent = "Images must be 5 MB or smaller.";
+    return;
+  }
+
+  const { data: userData } = await supabaseClient.auth.getUser();
+  if (!userData.user) {
+    status.textContent = "Please sign in again.";
+    return;
+  }
+
+  const button = document.getElementById("sendChatImageButton");
+  button.disabled = true;
+  button.textContent = "Uploading...";
+
+  const extension = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const filePath = currentConversationId + "/" + userData.user.id + "/" + Date.now() + "." + extension;
+
+  const { error: uploadError } = await supabaseClient.storage
+    .from("chat-images")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type
+    });
+
+  if (uploadError) {
+    console.error("Chat image upload error:", uploadError);
+    status.textContent = "Image upload failed: " + uploadError.message;
+    button.disabled = false;
+    button.textContent = "📷 Send Photo";
+    return;
+  }
+
+  const { error: messageError } = await supabaseClient
+    .from("messages")
+    .insert({
+      conversation_id: currentConversationId,
+      sender_id: userData.user.id,
+      content: "CHAT_IMAGE:" + filePath
+    });
+
+  if (messageError) {
+    console.error("Chat image message error:", messageError);
+    status.textContent = "Image uploaded but could not be sent: " + messageError.message;
+    button.disabled = false;
+    button.textContent = "📷 Send Photo";
+    return;
+  }
+
+  input.value = "";
+  status.textContent = "Photo sent.";
+  button.disabled = false;
+  button.textContent = "📷 Send Photo";
   await loadDirectMessages();
   await loadConversations();
 }
