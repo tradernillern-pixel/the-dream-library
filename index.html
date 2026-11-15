@@ -3797,6 +3797,16 @@ showPage("auth");
 return;
 }
 
+const permission = await supabaseClient.rpc("can_comment_on_dream", {
+  _dream_id: currentDreamId
+});
+if (permission.error || permission.data !== true) {
+  alert(permission.error
+    ? "Unable to check comment privacy: " + permission.error.message
+    : "The dream owner does not accept comments, or a block is active.");
+  return;
+}
+
 const form = document.getElementById("dreamReplyForm_" + parentCommentId);
 const button = form ? form.querySelector("button") : null;
 if (button) {
