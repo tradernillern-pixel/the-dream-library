@@ -5227,7 +5227,13 @@ async function updateReportStatus(id,status){
  if(x.error)alert(x.error.message);else loadAdminReports("pending");
 }
 function toggleDarkMode(){
- document.body.classList.toggle("dark-mode");localStorage.setItem("dreamLibraryTheme",document.body.classList.contains("dark-mode")?"dark":"light");
+ document.body.classList.toggle("dark-mode");
+ localStorage.setItem("dreamLibraryTheme",document.body.classList.contains("dark-mode")?"dark":"light");
+ updateThemeSettingLabel();
+}
+function updateThemeSettingLabel(){
+ const label=document.getElementById("themeSettingStatus");
+ if(label)label.textContent=document.body.classList.contains("dark-mode")?"Dark appearance is on":"Light appearance is on";
 }
 async function resetPassword(){
  const email=document.getElementById("authEmail").value.trim();if(!email){alert("Enter your email first.");return;}
@@ -5241,6 +5247,7 @@ async function resetPassword(){
 
 async function initializeApp() {
 if(localStorage.getItem("dreamLibraryTheme")==="dark")document.body.classList.add("dark-mode");
+updateThemeSettingLabel();
 const { data: userData } = await supabaseClient.auth.getUser();
 if (userData && userData.user) {
   startNotificationRealtime();
