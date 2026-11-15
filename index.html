@@ -331,25 +331,13 @@ Dreams remembered. Stories preserved.
 🔔 Notifications <span id="notificationBadge" style="display:none;"></span>
 </button>
 
-<button onclick="showPage('online')">
-🟢 Online
-</button>
-
 <button onclick="showPage('messages')">
 💬 Messages <span id="messagesBadge" style="display:none;background:#e05252;color:white;border-radius:999px;padding:2px 7px;font-size:12px;margin-left:4px;"></span>
 </button>
 
-<button onclick="showPage('profile')">
-👤 Profile
+<button onclick="showPage('settings')">
+⚙️ Settings
 </button>
-
-<button onclick="showPage('statistics')">
-📊 Statistics
-</button>
-
-<button onclick="showPage('auth')">🔐 Account</button>
-<button onclick="showPage('settings')">⚙️ Settings</button>
-<button id="themeToggleButton" onclick="toggleDarkMode()">🌙 Dark mode</button>
 
 </nav>
 <nav id="adminNavigation" style="display:none"><button onclick="showPage('admin');loadAdminReports('pending')">🛡️ Admin</button></nav>
@@ -1272,24 +1260,54 @@ See who's here in The Dream Library right now.
   </div>
 </section>
 
-<section id="settings" class="page">
-  <h2>⚙️ Settings</h2>
-  <div class="card" style="display:flex;align-items:center;gap:14px;padding:20px;">
-    <div style="font-size:38px;">🌙</div>
-    <div><h3 style="margin:0;">The Dream Library</h3><p class="meta" style="margin:5px 0 0;">Personal settings and account preferences</p></div>
+<section id="settings" class="page settings-page">
+  <div class="settings-heading">
+    <p class="settings-eyebrow">YOUR SPACE</p>
+    <h2>Settings</h2>
+    <p class="meta">Make The Dream Library feel like yours.</p>
   </div>
-  <div class="card">
-    <h3>Account</h3>
-    <button class="outline-button" style="display:block;width:100%;text-align:left;padding:15px;margin:6px 0;" onclick="showPage('profile')">👤　Profile <small style="display:block;margin-left:32px;">Edit your dreamer name, bio and profile</small></button>
-    <button class="outline-button" style="display:block;width:100%;text-align:left;padding:15px;margin:6px 0;" onclick="showPage('auth')">🔐　Account & security <small style="display:block;margin-left:32px;">Sign-in and password recovery</small></button>
+
+  <div class="settings-profile-card">
+    <div class="settings-profile-avatar">🌙</div>
+    <div class="settings-profile-copy">
+      <strong>Your profile</strong>
+      <span>Personal details, profile photo and bio</span>
+    </div>
+    <button class="settings-arrow" aria-label="Open profile" onclick="showPage('profile')">›</button>
   </div>
-  <div class="card">
-    <h3>Privacy</h3>
-    <button class="outline-button" style="display:block;width:100%;text-align:left;padding:15px;margin:6px 0;" onclick="showPage('privacy-settings')">🔒　Privacy <small style="display:block;margin-left:32px;">Online visibility, messages, comments and blocked users</small></button>
+
+  <div class="settings-group">
+    <h3>ACCOUNT</h3>
+    <button class="settings-row" onclick="showPage('profile')">
+      <span class="settings-icon">👤</span><span class="settings-row-copy"><strong>Profile</strong><small>Edit your dreamer identity</small></span><span class="settings-chevron">›</span>
+    </button>
+    <button class="settings-row" onclick="showPage('auth')">
+      <span class="settings-icon">🔐</span><span class="settings-row-copy"><strong>Account & security</strong><small>Sign-in and password recovery</small></span><span class="settings-chevron">›</span>
+    </button>
   </div>
-  <div class="card">
-    <h3>Appearance</h3>
-    <button class="outline-button" style="display:block;width:100%;text-align:left;padding:15px;margin:6px 0;" onclick="toggleDarkMode()">🌗　Theme <small style="display:block;margin-left:32px;">Switch between light and dark mode</small></button>
+
+  <div class="settings-group">
+    <h3>YOUR ACTIVITY</h3>
+    <button class="settings-row" onclick="showPage('online')">
+      <span class="settings-icon">🟢</span><span class="settings-row-copy"><strong>Online dreamers</strong><small>See who's here right now</small></span><span class="settings-chevron">›</span>
+    </button>
+    <button class="settings-row" onclick="showPage('statistics')">
+      <span class="settings-icon">📊</span><span class="settings-row-copy"><strong>Statistics</strong><small>Your dream activity and community insights</small></span><span class="settings-chevron">›</span>
+    </button>
+  </div>
+
+  <div class="settings-group">
+    <h3>PRIVACY & SAFETY</h3>
+    <button class="settings-row" onclick="showPage('privacy-settings')">
+      <span class="settings-icon">🛡️</span><span class="settings-row-copy"><strong>Privacy</strong><small>Online visibility, messages, comments and blocked accounts</small></span><span class="settings-chevron">›</span>
+    </button>
+  </div>
+
+  <div class="settings-group">
+    <h3>APPEARANCE</h3>
+    <button class="settings-row" onclick="toggleDarkMode();updateThemeSettingLabel()">
+      <span class="settings-icon">🌗</span><span class="settings-row-copy"><strong>Dark mode</strong><small id="themeSettingStatus">Choose your preferred appearance</small></span><span class="settings-chevron">›</span>
+    </button>
   </div>
 </section>
 
