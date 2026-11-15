@@ -1659,6 +1659,16 @@ async function startDirectConversation(otherUserId) {
     return;
   }
 
+  const permission = await supabaseClient.rpc("can_message_user", {
+    _other_user_id: otherUserId
+  });
+  if (permission.error || permission.data !== true) {
+    alert(permission.error
+      ? "Unable to check messaging privacy: " + permission.error.message
+      : "This dreamer does not accept messages, or a block is active.");
+    return;
+  }
+
   const { data: conversationId, error } = await supabaseClient
     .rpc("create_direct_conversation", { _other_user_id: otherUserId });
 
@@ -3686,6 +3696,16 @@ if (!userData.user) {
 alert("Please sign in to comment. 🔐");
 showPage("auth");
 return;
+}
+
+const permission = await supabaseClient.rpc("can_comment_on_dream", {
+  _dream_id: currentDreamId
+});
+if (permission.error || permission.data !== true) {
+  notice.textContent = permission.error
+    ? "Unable to check comment privacy: " + permission.error.message
+    : "The dream owner does not accept comments, or a block is active.";
+  return;
 }
 
 const button = document.querySelector("#dreamCommentForm button");
