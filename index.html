@@ -2377,6 +2377,8 @@ function closeMessageChat() {
   currentChatPartnerName = "Conversation";
   const settingsScreen = document.getElementById("chatSettingsScreen");
   if (settingsScreen) settingsScreen.style.display = "none";
+  const chatPanel = document.getElementById("messageChatPanel");
+  if (chatPanel) chatPanel.classList.remove("chat-settings-open");
   const conversationContent = document.getElementById("chatConversationContent");
   if (conversationContent) conversationContent.style.display = "block";
   document.getElementById("messageChatPanel").style.display = "none";
