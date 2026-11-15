@@ -1075,21 +1075,38 @@ See who is interacting with your dreams.
   
 <!-- DIRECT MESSAGES -->
 
-<section id="messages" class="page">
+<section id="messages" class="page messages-page">
 
-<h2>💬 Direct Messages</h2>
-<p class="tagline">Private conversations between dreamers.</p>
-
-<div class="card">
-  <h3>🔎 Find a Dreamer</h3>
-  <input id="dreamerSearchInput" type="search" placeholder="Search dreamer names..." oninput="searchDreamers()">
-  <div id="dreamerSearchResults"><p class="empty">Search for a dreamer to start a conversation.</p></div>
+<div class="messages-heading">
+  <div>
+    <h2>💬 Messages</h2>
+    <p class="tagline">Your private space to connect with dreamers.</p>
+  </div>
+  <button class="save-button new-message-button" onclick="focusDreamerSearch()">＋ New message</button>
 </div>
 
-<div class="card">
-  <h3>💌 Your Conversations</h3>
-  <div id="conversationsList"><p class="empty">Your conversations will appear here.</p></div>
-</div>
+<div class="messages-workspace" id="messagesWorkspace">
+  <aside class="messages-sidebar">
+    <div class="messages-sidebar-heading">
+      <h3>Chats</h3>
+      <span class="messages-sidebar-caption">Recent conversations</span>
+    </div>
+    <div class="messages-search">
+      <label for="dreamerSearchInput">Find a dreamer</label>
+      <input id="dreamerSearchInput" type="search" placeholder="Search names..." oninput="searchDreamers()">
+      <div id="dreamerSearchResults" class="dreamer-search-results"><p class="empty">Search by name to start a new conversation.</p></div>
+    </div>
+    <div class="conversation-list-heading">Recent chats</div>
+    <div id="conversationsList" class="conversations-list"><p class="empty">Your conversations will appear here.</p></div>
+  </aside>
+
+  <main class="messages-main">
+    <div id="messageEmptyState" class="message-empty-state">
+      <div class="message-empty-icon">✉️</div>
+      <h3>Your conversations belong here</h3>
+      <p>Select a chat from the left or start a new message.</p>
+      <button class="outline-button" onclick="focusDreamerSearch()">Find a dreamer</button>
+    </div>
 
 <div class="card" id="messageChatPanel" style="display:none;">
   <div class="chat-topbar">
@@ -1121,6 +1138,8 @@ See who is interacting with your dreams.
   </div>
   <p id="chatImageSelection" class="meta"></p>
   <p id="messageStatus" class="meta"></p>
+</div>
+  </main>
 </div>
 
 </section>
@@ -1531,6 +1550,17 @@ if (pageId === "messages") {
    DIRECT MESSAGING
    ================================================== */
 
+function focusDreamerSearch() {
+  const workspace = document.getElementById("messagesWorkspace");
+  if (workspace) workspace.classList.remove("mobile-chat-open");
+  const input = document.getElementById("dreamerSearchInput");
+  if (input) {
+    input.focus();
+    input.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+}
+
+
 async function searchDreamers() {
   const input = document.getElementById("dreamerSearchInput");
   const results = document.getElementById("dreamerSearchResults");
@@ -1615,7 +1645,9 @@ async function loadConversations() {
   if (!conversationIds.length) {
     const badge = document.getElementById("messagesBadge");
     if (badge) badge.style.display = "none";
-    list.innerHTML = "<p class='empty'>No conversations yet. Search for a dreamer above to start one.</p>";
+    list.innerHTML = "<p class='empty'>No chats yet. Search above to start your first conversation.</p>";
+    const emptyState = document.getElementById("messageEmptyState");
+    if (emptyState) emptyState.style.display = "flex";
     return;
   }
 
@@ -1720,14 +1752,13 @@ async function loadConversations() {
       : "";
 
     return `
-      <div class="dream-item">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-          <strong>${escapeHTML(name)}</strong>
-          ${unreadBadge}
-        </div>
-        <p class="meta">${escapeHTML(preview.slice(0, 90))}</p>
-        <button class="save-button" onclick="openDirectConversation('${conversation.id}','${participant.user_id}')">Open Chat</button>
-      </div>
+      <button type="button" class="conversation-item${currentConversationId === conversation.id ? " active" : ""}" onclick="openDirectConversation('${conversation.id}','${participant.user_id}')">
+        <span class="conversation-avatar">🌙</span>
+        <span class="conversation-copy">
+          <span class="conversation-topline"><strong>${escapeHTML(name)}</strong>${unreadBadge}</span>
+          <span class="conversation-preview">${escapeHTML(preview.slice(0, 90))}</span>
+        </span>
+      </button>
     `;
   }).join("") || "<p class='empty'>No conversations yet.</p>";
 }
@@ -1778,6 +1809,13 @@ async function openDirectConversation(conversationId, otherUserId) {
   const name = profile ? (profile.display_name || profile.pseudonym || "Dreamer") : "Dreamer";
   document.getElementById("messageChatTitle").textContent = "💬 " + name;
   document.getElementById("messageChatPanel").style.display = "block";
+  const emptyState = document.getElementById("messageEmptyState");
+  if (emptyState) emptyState.style.display = "none";
+  const workspace = document.getElementById("messagesWorkspace");
+  if (workspace) workspace.classList.add("mobile-chat-open");
+  document.querySelectorAll(".conversation-item").forEach(function(item) { item.classList.remove("active"); });
+  const selectedChat = document.querySelector(".conversation-item[onclick*=\"" + conversationId + "\"]");
+  if (selectedChat) selectedChat.classList.add("active");
   applyChatTheme(getSavedChatTheme(conversationId));
   document.getElementById("messageStatus").textContent = "";
   await loadDirectMessages();
@@ -2146,6 +2184,11 @@ function closeMessageChat() {
   currentConversationId = null;
   currentChatPartnerId = null;
   document.getElementById("messageChatPanel").style.display = "none";
+  const emptyState = document.getElementById("messageEmptyState");
+  if (emptyState) emptyState.style.display = "flex";
+  const workspace = document.getElementById("messagesWorkspace");
+  if (workspace) workspace.classList.remove("mobile-chat-open");
+  document.querySelectorAll(".conversation-item").forEach(function(item) { item.classList.remove("active"); });
 }
 
 
