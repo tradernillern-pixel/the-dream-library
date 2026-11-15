@@ -501,3 +501,45 @@ body:not(.dark-mode) .message-empty-icon { background:#edf3fb; }
   .messages-heading { flex-direction:column; }
   .new-message-button { width:100%; }
 }
+
+
+/* Conversation options menu, profile preview and wallpaper controls */
+#messageChatPanel .chat-actions { position:relative; display:flex; align-items:center; gap:8px; }
+#messageChatPanel .chat-menu-button {
+  width:40px; height:40px; border-radius:50%; border:1px solid var(--chat-border);
+  background:var(--chat-surface); color:var(--chat-text); font-size:25px; line-height:1; cursor:pointer;
+}
+#messageChatPanel .chat-options-menu {
+  position:absolute; z-index:30; top:48px; right:0; width:min(260px,80vw);
+  padding:7px; border:1px solid var(--chat-border); border-radius:13px;
+  background:var(--chat-surface); color:var(--chat-text);
+  box-shadow:0 14px 35px rgba(0,0,0,.3);
+}
+#messageChatPanel .chat-options-menu button {
+  display:block; width:100%; padding:10px 11px; border:0; border-radius:8px;
+  background:transparent; color:var(--chat-text); text-align:left; cursor:pointer; font-size:13px;
+}
+#messageChatPanel .chat-options-menu button:hover { background:rgba(130,170,220,.15); }
+#messageChatPanel .chat-options-menu .chat-menu-danger { color:#ff9b9b; }
+#messageChatPanel .chat-wallpaper-options { padding:4px 8px 7px 15px; border-left:2px solid var(--chat-border); margin:3px 0 5px 8px; }
+#messageChatPanel .chat-wallpaper-options button { font-size:12px; padding:7px 9px; }
+#messageChatPanel .chat-partner-profile {
+  position:relative; display:flex; align-items:center; gap:13px; padding:13px;
+  margin:12px 0; border:1px solid var(--chat-border); border-radius:13px;
+  background:var(--chat-surface); color:var(--chat-text);
+}
+#messageChatPanel .chat-profile-avatar {
+  width:54px; height:54px; flex:0 0 54px; border-radius:50%;
+  display:grid; place-items:center; overflow:hidden; background:rgba(130,170,220,.18); font-size:25px;
+}
+#messageChatPanel .chat-profile-avatar img { width:100%; height:100%; object-fit:cover; }
+#messageChatPanel .chat-profile-copy { min-width:0; padding-right:25px; }
+#messageChatPanel .chat-profile-copy strong { color:var(--chat-text); }
+#messageChatPanel .chat-profile-copy p { margin:3px 0 0; color:var(--chat-muted); font-size:13px; overflow-wrap:anywhere; }
+#messageChatPanel .profile-card-close {
+  position:absolute; right:9px; top:8px; border:0; background:transparent; color:var(--chat-muted); cursor:pointer;
+}
+#messageChatPanel .chat-topbar .chat-back-button { display:inline-block; }
+@media (max-width:760px) {
+  #messageChatPanel .chat-topbar .chat-back-button { display:inline-block; }
+}
