@@ -1270,17 +1270,14 @@ See who's here in The Dream Library right now.
   <div class="settings-profile-card">
     <div class="settings-profile-avatar">🌙</div>
     <div class="settings-profile-copy">
-      <strong>Your profile</strong>
-      <span>Personal details, profile photo and bio</span>
+      <strong id="settingsProfileName">Your profile</strong>
+      <span id="settingsProfileSubtext">Personal details, profile photo and bio</span>
     </div>
     <button class="settings-arrow" aria-label="Open profile" onclick="showPage('profile')">›</button>
   </div>
 
   <div class="settings-group">
     <h3>ACCOUNT</h3>
-    <button class="settings-row" onclick="showPage('profile')">
-      <span class="settings-icon">👤</span><span class="settings-row-copy"><strong>Profile</strong><small>Edit your dreamer identity</small></span><span class="settings-chevron">›</span>
-    </button>
     <button class="settings-row" onclick="showPage('auth')">
       <span class="settings-icon">🔐</span><span class="settings-row-copy"><strong>Account & security</strong><small>Sign-in and password recovery</small></span><span class="settings-chevron">›</span>
     </button>
@@ -1482,8 +1479,14 @@ if (pageId === "favorites") {
 loadFavorites();
 }
 
+if (pageId === "settings") {
+loadSettingsOverview();
+}
 if (pageId === "profile") {
 loadProfile();
+}
+if (pageId === "online") {
+renderOnlineDreamers();
 }
 if (pageId === "privacy-settings") {
 loadPrivacySettings();
@@ -5167,6 +5170,17 @@ dreamers.
 }
 
 
+
+async function loadSettingsOverview(){
+ const name=document.getElementById("settingsProfileName");
+ const sub=document.getElementById("settingsProfileSubtext");
+ if(!name||!sub)return;
+ const {data}=await supabaseClient.auth.getUser();
+ if(!data.user){name.textContent="Your profile";sub.textContent="Sign in to manage your account";return;}
+ sub.textContent=data.user.email||"Personal details, profile photo and bio";
+ const {data:profile}=await supabaseClient.from("profiles").select("display_name,pseudonym").eq("user_id",data.user.id).maybeSingle();
+ name.textContent=(profile&&(profile.display_name||profile.pseudonym))||"Your dreamer profile";
+}
 
 // Community safety, privacy and admin controls
 let isPlatformAdmin=false;
