@@ -3623,6 +3623,7 @@ return `
 <div class="button-row">
 ${!isReply && currentUser && repliesEnabled ? `<button class="outline-button" onclick="toggleDreamReplyForm('${comment.id}')">↩️ Reply</button>` : ""}
 ${ownComment ? `<button class="outline-button" onclick="deleteDreamComment('${comment.id}')">🗑️ Delete</button>` : ""}
+${!ownComment && currentUser ? `<button class="outline-button" onclick="reportContent(\'comment\',\'${comment.id}\',\'${comment.user_id}\')">🚩 Report</button>` : ""}
 </div>
 ${!isReply && currentUser && repliesEnabled ? `
 <div id="dreamReplyForm_${comment.id}" style="display:none;margin-top:10px;">
@@ -5115,6 +5116,7 @@ async function savePrivacySettings(){
  const u=await supabaseClient.auth.getUser();if(!u.data.user){alert("Sign in first.");return;}
  const x=await supabaseClient.from("user_privacy_settings").upsert({user_id:u.data.user.id,allow_messages:document.getElementById("privacyAllowMessages").checked,show_online_status:document.getElementById("privacyShowOnline").checked,allow_comments:document.getElementById("privacyAllowComments").checked},{onConflict:"user_id"});
  document.getElementById("privacySettingsStatus").textContent=x.error?x.error.message:"Privacy settings saved.";
+  if(!x.error){if(document.getElementById("privacyShowOnline").checked)startPresence();else stopPresence();}
 }
 async function checkPlatformAdmin(){
  const x=await supabaseClient.rpc("is_platform_admin");isPlatformAdmin=!x.error&&x.data===true;
