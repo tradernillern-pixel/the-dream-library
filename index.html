@@ -229,6 +229,7 @@ button {
   font-size: 26px;
 }
 
+.dark-mode {background:#101522!important;color:#edf2ff!important}.dark-mode .card,.dark-mode .dream-item,.dark-mode input,.dark-mode textarea {background:#1a2333!important;color:#edf2ff!important;border-color:#344158!important}
 .profile-header {
   text-align: center;
   padding: 15px;
@@ -346,12 +347,11 @@ Dreams remembered. Stories preserved.
 📊 Statistics
 </button>
 
-<button onclick="showPage('auth')">
-🔐 Account
-</button>
+<button onclick="showPage('auth')">🔐 Account</button>
+<button id="themeToggleButton" onclick="toggleDarkMode()">🌙 Dark mode</button>
 
 </nav>
-
+<nav id="adminNavigation" style="display:none"><button onclick="showPage('admin');loadAdminReports('pending')">🛡️ Admin</button></nav>
 
 <!-- HOME -->
 
@@ -1268,9 +1268,9 @@ See who's here in The Dream Library right now.
     </p>
 
   </div>
-
+<div class="card"><h3>🔒 Privacy & Safety</h3><label><input type="checkbox" id="privacyAllowMessages" checked> Allow direct messages</label><label><input type="checkbox" id="privacyShowOnline" checked> Show online status</label><label><input type="checkbox" id="privacyAllowComments" checked> Allow comments</label><button class="save-button" onclick="savePrivacySettings()">Save privacy settings</button><p id="privacySettingsStatus"></p></div>
 </section>
-
+<section id="admin" class="page"><h2>🛡️ Admin Moderation</h2><div class="card"><button onclick="loadAdminReports('pending')">Pending</button><button onclick="loadAdminReports('all')">All reports</button><div id="adminReportsList"></div></div></section>
 
 <!-- STATISTICS -->
 
@@ -5061,16 +5061,60 @@ dreamers.
 }
 
 
+
+// Community safety, privacy and admin controls
+let isPlatformAdmin=false;
+async function reportContent(type,id,owner){
+ const u=await supabaseClient.auth.getUser();if(!u.data.user){showPage("auth");return;}
+ const reason=prompt("Why are you reporting this content?");if(!reason)return;
+ const x=await supabaseClient.from("content_reports").insert({reporter_id:u.data.user.id,reported_user_id:owner||null,target_type:type,target_id:id||null,reason:reason.slice(0,200),details:""});
+ alert(x.error?x.error.message:"Report submitted.");
+}
+async function blockDreamer(id){
+ const u=await supabaseClient.auth.getUser();if(!u.data.user){showPage("auth");return;}
+ if(!confirm("Block this dreamer?"))return;
+ const x=await supabaseClient.from("user_blocks").upsert({blocker_id:u.data.user.id,blocked_id:id},{onConflict:"blocker_id,blocked_id"});
+ alert(x.error?x.error.message:"Dreamer blocked.");
+}
+async function savePrivacySettings(){
+ const u=await supabaseClient.auth.getUser();if(!u.data.user){alert("Sign in first.");return;}
+ const x=await supabaseClient.from("user_privacy_settings").upsert({user_id:u.data.user.id,allow_messages:document.getElementById("privacyAllowMessages").checked,show_online_status:document.getElementById("privacyShowOnline").checked,allow_comments:document.getElementById("privacyAllowComments").checked},{onConflict:"user_id"});
+ document.getElementById("privacySettingsStatus").textContent=x.error?x.error.message:"Privacy settings saved.";
+}
+async function checkPlatformAdmin(){
+ const x=await supabaseClient.rpc("is_platform_admin");isPlatformAdmin=!x.error&&x.data===true;
+ const n=document.getElementById("adminNavigation");if(n)n.style.display=isPlatformAdmin?"block":"none";
+}
+async function loadAdminReports(status){
+ if(!isPlatformAdmin)return;const box=document.getElementById("adminReportsList");if(!box)return;
+ let q=supabaseClient.from("content_reports").select("*").order("created_at",{ascending:false}).limit(100);
+ if(status==="pending")q=q.eq("status","pending");const x=await q;
+ if(x.error){box.textContent=x.error.message;return;}
+ box.innerHTML=(x.data||[]).map(r=>"<article class='dream-item'><b>"+escapeHTML(r.target_type)+" report</b><p>"+escapeHTML(r.reason)+"</p><p>"+escapeHTML(r.details||"")+"</p><p>"+escapeHTML(r.status)+"</p><button onclick=\"updateReportStatus('"+r.id+"','resolved')\">Resolve</button><button onclick=\"updateReportStatus('"+r.id+"','dismissed')\">Dismiss</button></article>").join("")||"No reports.";
+}
+async function updateReportStatus(id,status){
+ if(!isPlatformAdmin)return;const x=await supabaseClient.from("content_reports").update({status:status}).eq("id",id);
+ if(x.error)alert(x.error.message);else loadAdminReports("pending");
+}
+function toggleDarkMode(){
+ document.body.classList.toggle("dark-mode");localStorage.setItem("dreamLibraryTheme",document.body.classList.contains("dark-mode")?"dark":"light");
+}
+async function resetPassword(){
+ const email=document.getElementById("authEmail").value.trim();if(!email){alert("Enter your email first.");return;}
+ const x=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+ alert(x.error?x.error.message:"Password reset email sent.");
+}
+
 /* ==================================================
    START
    ================================================== */
 
 async function initializeApp() {
-
+if(localStorage.getItem("dreamLibraryTheme")==="dark")document.body.classList.add("dark-mode");
 const { data: userData } = await supabaseClient.auth.getUser();
-
 if (userData && userData.user) {
   startNotificationRealtime();
+  await checkPlatformAdmin();
   startPresence();
 }
 
