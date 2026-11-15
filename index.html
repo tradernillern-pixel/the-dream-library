@@ -1117,14 +1117,12 @@ See who is interacting with your dreams.
     <div class="chat-actions">
       <button type="button" class="chat-menu-button" aria-label="Conversation options" aria-expanded="false" onclick="toggleChatMenu()">⋮</button>
       <div id="chatOptionsMenu" class="chat-options-menu" style="display:none;">
-        <button type="button" onclick="viewChatPartnerProfile()">👤 View profile</button>
         <button type="button" onclick="openChatSettingsScreen()">⚙️ Message settings</button>
       </div>
       <button class="outline-button chat-back-button" onclick="closeMessageChat()">← Back</button>
     </div>
   </div>
   <div id="chatConversationContent">
-  <div id="chatPartnerProfileCard" class="chat-partner-profile" style="display:none;"></div>
   <div id="messagesList" class="messages-list" style="max-height:420px;overflow-y:auto;"></div>
   <p id="typingStatus" class="meta" aria-live="polite" style="min-height:20px;"></p>
   <label for="messageInput">Write a message</label>
@@ -1167,8 +1165,11 @@ See who is interacting with your dreams.
       <button type="button" id="chatMuteButton" class="outline-button" onclick="toggleChatMute()">🔕 Mute notifications</button>
     </div>
     <div class="chat-settings-section">
+      <h4>👤 Dreamer profile</h4>
+      <div id="chatSettingsProfileCard" class="chat-partner-profile"><p class="meta">Loading dreamer profile...</p></div>
+    </div>
+    <div class="chat-settings-section">
       <h4>🛡️ Safety</h4>
-      <button type="button" class="outline-button" onclick="viewChatPartnerProfile()">👤 View profile</button>
       <button type="button" class="danger-button" onclick="blockCurrentChatPartner()">🚫 Block dreamer</button>
       <button type="button" class="danger-button" onclick="reportCurrentChatPartner()">⚑ Report dreamer</button>
     </div>
@@ -1615,9 +1616,12 @@ function openChatSettingsScreen() {
   const settings = document.getElementById("chatSettingsScreen");
   if (conversation) conversation.style.display = "none";
   if (settings) settings.style.display = "block";
+  const panel = document.getElementById("messageChatPanel");
+  if (panel) panel.classList.add("chat-settings-open");
   const title = document.getElementById("messageChatTitle");
   if (title) title.textContent = "⚙️ Message settings";
   updateChatMuteButton();
+  viewChatPartnerProfile();
 }
 
 function closeChatSettingsScreen() {
@@ -1625,6 +1629,8 @@ function closeChatSettingsScreen() {
   const settings = document.getElementById("chatSettingsScreen");
   if (settings) settings.style.display = "none";
   if (conversation) conversation.style.display = "block";
+  const panel = document.getElementById("messageChatPanel");
+  if (panel) panel.classList.remove("chat-settings-open");
   const title = document.getElementById("messageChatTitle");
   if (title) title.textContent = "💬 " + (currentChatPartnerName || "Conversation");
 }
@@ -1689,9 +1695,8 @@ function applyChatWallpaper(wallpaper) {
 async function viewChatPartnerProfile() {
   if (!currentChatPartnerId) return;
   closeChatMenu();
-  const card = document.getElementById("chatPartnerProfileCard");
+  const card = document.getElementById("chatSettingsProfileCard");
   if (!card) return;
-  card.style.display = "block";
   card.innerHTML = "<p class='meta'>Loading dreamer profile...</p>";
   const result = await supabaseClient.from("profiles")
     .select("display_name,pseudonym,bio,avatar_url")
@@ -1706,8 +1711,7 @@ async function viewChatPartnerProfile() {
   const avatar = profile.avatar_url
     ? '<img src="' + escapeHTML(profile.avatar_url) + '" alt="Dreamer avatar">'
     : '<span>🌙</span>';
-  card.innerHTML = '<button type="button" class="profile-card-close" onclick="document.getElementById(\'chatPartnerProfileCard\').style.display=\'none\'">✕</button>' +
-    '<div class="chat-profile-avatar">' + avatar + '</div>' +
+  card.innerHTML = '<div class="chat-profile-avatar">' + avatar + '</div>' +
     '<div class="chat-profile-copy"><strong>' + escapeHTML(name) + '</strong><p>' + escapeHTML(profile.bio || "No bio yet.") + '</p></div>';
 }
 
