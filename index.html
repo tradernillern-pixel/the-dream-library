@@ -298,7 +298,7 @@ footer {
 
 <header>
 
-<h1><a class="brand-home" href="#home" onclick="showPage(\'home\');return false;">🌙 The Dream Library</a></h1>
+<h1><a class="brand-home" href="#home" onclick="showPage('home');return false;">🌙 The Dream Library</a></h1>
 
 <p>
 Dreams remembered. Stories preserved.
@@ -1925,7 +1925,7 @@ async function loadDirectMessages() {
         ? '<span title="Delivered" style="color:#c8d7e8;font-weight:bold;">✓✓</span>'
         : '<span title="Sent" style="color:#c8d7e8;">✓</span>';
     const deleteButton = mine && !deleted
-      ? '<button class="outline-button" style="margin-top:6px;padding:4px 8px;font-size:12px;" onclick="deleteDirectMessage(\'' + message.id + '\')">Delete</button>'
+      ? '<button class="outline-button" style="margin-top:6px;padding:4px 8px;font-size:12px;" onclick="deleteDirectMessage('' + message.id + '')">Delete</button>'
       : "";
 
     return '<div style="display:flex;justify-content:' + (mine ? "flex-end" : "flex-start") + ';margin:10px 0;">' +
@@ -3701,7 +3701,7 @@ return `
 <div class="button-row">
 ${!isReply && currentUser && repliesEnabled ? `<button class="outline-button" onclick="toggleDreamReplyForm('${comment.id}')">↩️ Reply</button>` : ""}
 ${ownComment ? `<button class="outline-button" onclick="deleteDreamComment('${comment.id}')">🗑️ Delete</button>` : ""}
-${!ownComment && currentUser ? `<button class="outline-button" onclick="reportContent(\'comment\',\'${comment.id}\',\'${comment.user_id}\')">🚩 Report</button>` : ""}
+${!ownComment && currentUser ? `<button class="outline-button" onclick="reportContent('comment','${comment.id}','${comment.user_id}')">🚩 Report</button>` : ""}
 </div>
 ${!isReply && currentUser && repliesEnabled ? `
 <div id="dreamReplyForm_${comment.id}" style="display:none;margin-top:10px;">
@@ -5214,7 +5214,7 @@ async function loadBlockedUsers(){
  const r=await supabaseClient.from('user_blocks').select('blocked_id').eq('blocker_id',u.data.user.id);
  if(r.error){box.textContent=r.error.message;return;}
  const ids=(r.data||[]).map(x=>x.blocked_id); if(!ids.length){box.textContent='No blocked users.';return;}
- box.innerHTML=ids.map(id=>'<div class="button-row"><code>'+id+'</code><button class="outline-button" onclick="unblockDreamer(\''+id+'\')">Unblock</button></div>').join('');
+ box.innerHTML=ids.map(id=>'<div class="button-row"><code>'+id+'</code><button class="outline-button" onclick="unblockDreamer(''+id+'')">Unblock</button></div>').join('');
 }
 async function unblockDreamer(id){
  const u=await supabaseClient.auth.getUser();if(!u.data.user)return;
