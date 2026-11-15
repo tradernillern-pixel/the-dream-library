@@ -1269,7 +1269,7 @@ See who's here in The Dream Library right now.
     </p>
 
   </div>
-<div class="card"><h3>🔒 Privacy & Safety</h3><label><input type="checkbox" id="privacyAllowMessages" checked> Allow direct messages</label><label><input type="checkbox" id="privacyShowOnline" checked> Show online status</label><label><input type="checkbox" id="privacyAllowComments" checked> Allow comments</label><button class="save-button" onclick="savePrivacySettings()">Save privacy settings</button><p id="privacySettingsStatus"></p></div>
+<div class="card"><h3>🔒 Privacy & Safety</h3><label><input type="checkbox" id="privacyAllowMessages" checked> Allow direct messages</label><label><input type="checkbox" id="privacyShowOnline" checked> Show online status</label><label><input type="checkbox" id="privacyAllowComments" checked> Allow comments</label><button class="save-button" onclick="savePrivacySettings()">Save privacy settings</button><p id="privacySettingsStatus"></p><h4>Blocked dreamers</h4><div id="blockedUsersList">Loading...</div></div>
 </section>
 <section id="admin" class="page"><h2>🛡️ Admin Moderation</h2><div class="card"><button onclick="loadAdminReports('pending')">Pending</button><button onclick="loadAdminReports('all')">All reports</button><div id="adminReportsList"></div></div></section>
 
@@ -2055,6 +2055,8 @@ async function startPresence() {
   const user = userData && userData.user;
 
   if (!user) return;
+  const privacyCheck = await supabaseClient.from("user_privacy_settings").select("show_online_status").eq("user_id",user.id).maybeSingle();
+  if (privacyCheck.data && privacyCheck.data.show_online_status === false) { await stopPresence(); return; }
 
   if (presenceChannel) {
     await supabaseClient.removeChannel(presenceChannel);
@@ -5085,6 +5087,29 @@ async function blockDreamer(id){
  if(!confirm("Block this dreamer?"))return;
  const x=await supabaseClient.from("user_blocks").upsert({blocker_id:u.data.user.id,blocked_id:id},{onConflict:"blocker_id,blocked_id"});
  alert(x.error?x.error.message:"Dreamer blocked.");
+}
+async function loadPrivacySettings(){
+ const u=await supabaseClient.auth.getUser(); if(!u.data.user)return;
+ const r=await supabaseClient.from('user_privacy_settings').select('allow_messages,show_online_status,allow_comments').eq('user_id',u.data.user.id).maybeSingle();
+ if(r.error){console.warn(r.error.message);return;}
+ const v=r.data||{allow_messages:true,show_online_status:true,allow_comments:true};
+ document.getElementById('privacyAllowMessages').checked=v.allow_messages;
+ document.getElementById('privacyShowOnline').checked=v.show_online_status;
+ document.getElementById('privacyAllowComments').checked=v.allow_comments;
+ await loadBlockedUsers();
+}
+async function loadBlockedUsers(){
+ const box=document.getElementById('blockedUsersList'); if(!box)return;
+ const u=await supabaseClient.auth.getUser(); if(!u.data.user){box.textContent='Sign in to manage blocked users.';return;}
+ const r=await supabaseClient.from('user_blocks').select('blocked_id').eq('blocker_id',u.data.user.id);
+ if(r.error){box.textContent=r.error.message;return;}
+ const ids=(r.data||[]).map(x=>x.blocked_id); if(!ids.length){box.textContent='No blocked users.';return;}
+ box.innerHTML=ids.map(id=>'<div class="button-row"><code>'+id+'</code><button class="outline-button" onclick="unblockDreamer(\''+id+'\')">Unblock</button></div>').join('');
+}
+async function unblockDreamer(id){
+ const u=await supabaseClient.auth.getUser();if(!u.data.user)return;
+ const r=await supabaseClient.from('user_blocks').delete().eq('blocker_id',u.data.user.id).eq('blocked_id',id);
+ if(r.error)alert(r.error.message);else loadBlockedUsers();
 }
 async function savePrivacySettings(){
  const u=await supabaseClient.auth.getUser();if(!u.data.user){alert("Sign in first.");return;}
