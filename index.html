@@ -348,6 +348,7 @@ Dreams remembered. Stories preserved.
 </button>
 
 <button onclick="showPage('auth')">🔐 Account</button>
+<button onclick="showPage('settings')">⚙️ Settings</button>
 <button id="themeToggleButton" onclick="toggleDarkMode()">🌙 Dark mode</button>
 
 </nav>
@@ -1269,7 +1270,49 @@ See who's here in The Dream Library right now.
     </p>
 
   </div>
-<div class="card"><h3>🔒 Privacy & Safety</h3><label><input type="checkbox" id="privacyAllowMessages" checked> Allow direct messages</label><label><input type="checkbox" id="privacyShowOnline" checked> Show online status</label><label><input type="checkbox" id="privacyAllowComments" checked> Allow comments</label><button class="save-button" onclick="savePrivacySettings()">Save privacy settings</button><p id="privacySettingsStatus"></p><h4>Blocked dreamers</h4><div id="blockedUsersList">Loading...</div></div>
+</section>
+
+<section id="settings" class="page">
+  <h2>⚙️ Settings</h2>
+  <div class="card" style="display:flex;align-items:center;gap:14px;padding:20px;">
+    <div style="font-size:38px;">🌙</div>
+    <div><h3 style="margin:0;">The Dream Library</h3><p class="meta" style="margin:5px 0 0;">Personal settings and account preferences</p></div>
+  </div>
+  <div class="card">
+    <h3>Account</h3>
+    <button class="outline-button" style="display:block;width:100%;text-align:left;padding:15px;margin:6px 0;" onclick="showPage('profile')">👤　Profile <small style="display:block;margin-left:32px;">Edit your dreamer name, bio and profile</small></button>
+    <button class="outline-button" style="display:block;width:100%;text-align:left;padding:15px;margin:6px 0;" onclick="showPage('auth')">🔐　Account & security <small style="display:block;margin-left:32px;">Sign-in and password recovery</small></button>
+  </div>
+  <div class="card">
+    <h3>Privacy</h3>
+    <button class="outline-button" style="display:block;width:100%;text-align:left;padding:15px;margin:6px 0;" onclick="showPage('privacy-settings')">🔒　Privacy <small style="display:block;margin-left:32px;">Online visibility, messages, comments and blocked users</small></button>
+  </div>
+  <div class="card">
+    <h3>Appearance</h3>
+    <button class="outline-button" style="display:block;width:100%;text-align:left;padding:15px;margin:6px 0;" onclick="toggleDarkMode()">🌗　Theme <small style="display:block;margin-left:32px;">Switch between light and dark mode</small></button>
+  </div>
+</section>
+
+<section id="privacy-settings" class="page">
+  <button class="outline-button" onclick="showPage('settings')">← Back to Settings</button>
+  <h2>🔒 Privacy</h2>
+  <p class="meta">Choose how other dreamers can interact with you.</p>
+  <div class="card">
+    <h3>Who can see my presence</h3>
+    <label style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;">Show online status <input type="checkbox" id="privacyShowOnline" checked></label>
+  </div>
+  <div class="card">
+    <h3>Who can contact me</h3>
+    <label style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;">Allow direct messages <input type="checkbox" id="privacyAllowMessages" checked></label>
+    <label style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;">Allow comments and replies <input type="checkbox" id="privacyAllowComments" checked></label>
+  </div>
+  <div class="card">
+    <h3>Blocked dreamers</h3>
+    <p class="meta">People you have blocked cannot message or comment on your dreams.</p>
+    <div id="blockedUsersList">Loading...</div>
+  </div>
+  <button class="save-button" onclick="savePrivacySettings()">Save privacy settings</button>
+  <p id="privacySettingsStatus"></p>
 </section>
 <section id="admin" class="page"><h2>🛡️ Admin Moderation</h2><div class="card"><button onclick="loadAdminReports('pending')">Pending</button><button onclick="loadAdminReports('all')">All reports</button><div id="adminReportsList"></div></div></section>
 
@@ -1423,6 +1466,8 @@ loadFavorites();
 
 if (pageId === "profile") {
 loadProfile();
+}
+if (pageId === "privacy-settings") {
 loadPrivacySettings();
 }
 if (pageId === "admin") {
