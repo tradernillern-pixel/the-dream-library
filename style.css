@@ -557,3 +557,28 @@ body:not(.dark-mode) .message-empty-icon { background:#edf3fb; }
 .chat-wallpaper-grid button{padding:12px;border:1px solid #50759d;border-radius:9px;background:#102845;color:#fff;cursor:pointer;}
 #chatSettingsScreen select{margin-bottom:10px;}
 @media(max-width:600px){.chat-settings-heading{align-items:flex-start;flex-direction:column}.chat-wallpaper-grid{grid-template-columns:1fr 1fr}}
+
+
+/* Full-panel conversation settings view */
+#messageChatPanel.chat-settings-open .chat-topbar{display:none;}
+#messageChatPanel.chat-settings-open #chatSettingsScreen{
+  display:block;
+  width:100%;
+  min-height:100%;
+  box-sizing:border-box;
+  padding:20px;
+  animation:chatSettingsEnter .18s ease-out;
+}
+#chatSettingsProfileCard{
+  display:flex;
+  align-items:center;
+  min-height:76px;
+}
+#chatSettingsProfileCard .chat-profile-copy{overflow-wrap:anywhere;}
+@keyframes chatSettingsEnter{
+  from{opacity:.65;transform:translateY(5px);}
+  to{opacity:1;transform:translateY(0);}
+}
+@media(max-width:600px){
+  #messageChatPanel.chat-settings-open #chatSettingsScreen{padding:14px 8px;}
+}
