@@ -1182,7 +1182,19 @@ See who is interacting with your dreams.
 
     <div id="chatSettingsSection-disappearing" class="chat-settings-subpage" style="display:none;">
       <button type="button" class="chat-settings-back" onclick="returnToChatSettings()">← All conversation settings</button>
-      <div class="chat-settings-feature-card"><span class="chat-settings-feature-icon">⏳</span><h4>Disappearing messages</h4><p>Set messages to expire automatically after a chosen period.</p><span class="chat-feature-status">COMING SOON</span><p class="meta">This needs a secure server-side expiry and cleanup process before it can be enabled. No messages are currently set to disappear.</p></div>
+      <div class="chat-settings-section">
+        <h4>⏳ Disappearing messages</h4>
+        <p class="meta">Choose how long newly sent messages remain available to both participants.</p>
+        <label for="disappearingDurationSelect">Message duration</label>
+        <select id="disappearingDurationSelect" onchange="saveDisappearingDuration(this.value)">
+          <option value="0">Off</option>
+          <option value="86400">24 hours</option>
+          <option value="604800">7 days</option>
+          <option value="2592000">30 days</option>
+        </select>
+        <p id="disappearingDurationStatus" class="meta" aria-live="polite">Loading conversation setting...</p>
+        <p class="meta">The setting applies to new messages only. Existing messages keep their current expiry. Expired messages are hidden from both participants; scheduled database cleanup will be configured separately.</p>
+      </div>
     </div>
 
     <div id="chatSettingsSection-search" class="chat-settings-subpage" style="display:none;">
@@ -1686,10 +1698,67 @@ function openChatSettingsSection(section) {
   if (title) title.textContent = titles[section] || "Conversation settings";
   if (section === "profile") viewChatPartnerProfile();
   if (section === "preferences") updateChatMuteButton();
+  if (section === "disappearing") loadDisappearingDuration();
   if (section === "search") {
     const input = document.getElementById("chatMessageSearchInput");
     if (input) input.focus();
   }
+}
+
+async function loadDisappearingDuration() {
+  const select = document.getElementById("disappearingDurationSelect");
+  const status = document.getElementById("disappearingDurationStatus");
+  if (!currentConversationId || !select) return;
+  select.disabled = true;
+  if (status) status.textContent = "Loading conversation setting...";
+  const { data, error } = await supabaseClient
+    .from("conversation_disappearing_settings")
+    .select("duration_seconds")
+    .eq("conversation_id", currentConversationId)
+    .maybeSingle();
+  if (error) {
+    console.error("Load disappearing-message setting:", error);
+    if (status) status.textContent = "Unable to load this setting. Please try again.";
+    select.disabled = false;
+    return;
+  }
+  select.value = String(data ? data.duration_seconds : 0);
+  if (status) status.textContent = data && data.duration_seconds > 0
+    ? "Active: new messages expire after " + select.options[select.selectedIndex].text + "."
+    : "Off: new messages will not expire automatically.";
+  select.disabled = false;
+}
+
+async function saveDisappearingDuration(value) {
+  const select = document.getElementById("disappearingDurationSelect");
+  const status = document.getElementById("disappearingDurationStatus");
+  const allowed = ["0", "86400", "604800", "2592000"];
+  if (!currentConversationId || !allowed.includes(String(value))) return;
+  const { data: authData } = await supabaseClient.auth.getUser();
+  if (!authData.user) {
+    if (status) status.textContent = "Please sign in again.";
+    return;
+  }
+  if (select) select.disabled = true;
+  if (status) status.textContent = "Saving setting...";
+  const { error } = await supabaseClient
+    .from("conversation_disappearing_settings")
+    .upsert({
+      conversation_id: currentConversationId,
+      duration_seconds: Number(value),
+      updated_by: authData.user.id,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "conversation_id" });
+  if (error) {
+    console.error("Save disappearing-message setting:", error);
+    if (status) status.textContent = "Could not save: " + error.message;
+    await loadDisappearingDuration();
+    return;
+  }
+  if (status) status.textContent = Number(value) > 0
+    ? "Saved. New messages will disappear after " + select.options[select.selectedIndex].text + "."
+    : "Saved. Disappearing messages are now off.";
+  if (select) select.disabled = false;
 }
 
 function searchCurrentConversation(term) {
