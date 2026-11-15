@@ -1119,17 +1119,6 @@ See who is interacting with your dreams.
       <div id="chatOptionsMenu" class="chat-options-menu" style="display:none;">
         <button type="button" onclick="viewChatPartnerProfile()">👤 View profile</button>
         <button type="button" onclick="openChatSettingsScreen()">⚙️ Message settings</button>
-        <button type="button" onclick="focusChatTheme()">🎨 Chat theme</button>
-        <button type="button" onclick="toggleChatWallpaperMenu()">🖼️ Change wallpaper</button>
-        <div id="chatWallpaperOptions" class="chat-wallpaper-options" style="display:none;">
-          <button type="button" onclick="setChatWallpaper('none')">Default</button>
-          <button type="button" onclick="setChatWallpaper('stars')">Midnight stars</button>
-          <button type="button" onclick="setChatWallpaper('ocean')">Ocean waves</button>
-          <button type="button" onclick="setChatWallpaper('sunset')">Soft sunset</button>
-        </div>
-        <button type="button" id="chatMuteButton" onclick="toggleChatMute()">🔕 Mute notifications</button>
-        <button type="button" onclick="blockCurrentChatPartner()">🚫 Block dreamer</button>
-        <button type="button" class="chat-menu-danger" onclick="reportCurrentChatPartner()">⚑ Report dreamer</button>
       </div>
       <button class="outline-button chat-back-button" onclick="closeMessageChat()">← Back</button>
     </div>
@@ -1517,6 +1506,7 @@ let dreamCommentsChannel = null;
 let presenceChannel = null;
 let currentConversationId = null;
 let currentChatPartnerId = null;
+let currentChatPartnerName = "Conversation";
 let typingChannel = null;
 let typingTimer = null;
 let messageRealtimeChannel = null;
