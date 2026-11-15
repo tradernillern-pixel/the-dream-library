@@ -1092,11 +1092,25 @@ See who is interacting with your dreams.
 </div>
 
 <div class="card" id="messageChatPanel" style="display:none;">
-  <div class="button-row" style="justify-content:space-between;align-items:center;">
-    <h3 id="messageChatTitle">Conversation</h3>
-    <button class="outline-button" onclick="closeMessageChat()">← Back to conversations</button>
+  <div class="chat-topbar">
+    <div class="chat-title-wrap">
+      <h3 id="messageChatTitle">Conversation</h3>
+      <span class="chat-theme-caption">Personalise this conversation</span>
+    </div>
+    <button class="outline-button" onclick="closeMessageChat()">← Back</button>
   </div>
-  <div id="messagesList" style="max-height:420px;overflow-y:auto;"></div>
+  <div class="chat-theme-picker">
+    <label for="chatThemeSelect">Chat theme</label>
+    <select id="chatThemeSelect" onchange="changeChatTheme(this.value)" aria-label="Choose chat theme">
+      <option value="ocean">🌊 Ocean Blue</option>
+      <option value="midnight">🌌 Midnight</option>
+      <option value="rose">🌹 Rose</option>
+      <option value="lavender">💜 Lavender</option>
+      <option value="forest">🌿 Forest</option>
+      <option value="sunset">🌅 Sunset</option>
+    </select>
+  </div>
+  <div id="messagesList" class="messages-list" style="max-height:420px;overflow-y:auto;"></div>
   <p id="typingStatus" class="meta" aria-live="polite" style="min-height:20px;"></p>
   <label for="messageInput">Write a message</label>
   <textarea id="messageInput" rows="3" maxlength="5000" placeholder="Write your message..." oninput="handleMessageTyping()"></textarea>
@@ -1764,6 +1778,7 @@ async function openDirectConversation(conversationId, otherUserId) {
   const name = profile ? (profile.display_name || profile.pseudonym || "Dreamer") : "Dreamer";
   document.getElementById("messageChatTitle").textContent = "💬 " + name;
   document.getElementById("messageChatPanel").style.display = "block";
+  applyChatTheme(getSavedChatTheme(conversationId));
   document.getElementById("messageStatus").textContent = "";
   await loadDirectMessages();
   await startTypingRealtime(conversationId);
@@ -1874,6 +1889,53 @@ async function startMessageRealtime(conversationId) {
 }
 
 
+const CHAT_THEMES = {
+  ocean:    { label: "Ocean Blue", page: "#071d32", surface: "#0d2b47", incoming: "#163e5d", outgoing: "#1769aa", border: "#2e668b", text: "#f2f8ff", muted: "#b6cde0", accent: "#73c7f5" },
+  midnight: { label: "Midnight", page: "#11121f", surface: "#1b1d30", incoming: "#292b43", outgoing: "#5142a8", border: "#454568", text: "#f5f3ff", muted: "#c1bddb", accent: "#b5a6ff" },
+  rose:     { label: "Rose", page: "#2a1420", surface: "#3b1d2d", incoming: "#59283e", outgoing: "#b83d70", border: "#84405f", text: "#fff3f7", muted: "#e8b9cc", accent: "#ff9fc2" },
+  lavender: { label: "Lavender", page: "#211a35", surface: "#30264a", incoming: "#44345f", outgoing: "#7655b8", border: "#66518b", text: "#f8f3ff", muted: "#d2c4ed", accent: "#c5a8ff" },
+  forest:   { label: "Forest", page: "#10251e", surface: "#19372b", incoming: "#28503d", outgoing: "#287b55", border: "#3b7658", text: "#f0fff5", muted: "#b9d9c5", accent: "#8be0ae" },
+  sunset:   { label: "Sunset", page: "#2b1b19", surface: "#422722", incoming: "#65372c", outgoing: "#bd633d", border: "#8c5540", text: "#fff6ef", muted: "#e8c5b4", accent: "#ffb17e" }
+};
+
+function getSavedChatTheme(conversationId) {
+  if (!conversationId) return "ocean";
+  try {
+    const saved = localStorage.getItem("dreamLibraryChatTheme:" + conversationId);
+    return CHAT_THEMES[saved] ? saved : "ocean";
+  } catch (error) {
+    return "ocean";
+  }
+}
+
+function applyChatTheme(themeName) {
+  const panel = document.getElementById("messageChatPanel");
+  const picker = document.getElementById("chatThemeSelect");
+  const theme = CHAT_THEMES[themeName] || CHAT_THEMES.ocean;
+  if (!panel) return;
+
+  panel.dataset.chatTheme = CHAT_THEMES[themeName] ? themeName : "ocean";
+  panel.style.setProperty("--chat-page", theme.page);
+  panel.style.setProperty("--chat-surface", theme.surface);
+  panel.style.setProperty("--chat-incoming", theme.incoming);
+  panel.style.setProperty("--chat-outgoing", theme.outgoing);
+  panel.style.setProperty("--chat-border", theme.border);
+  panel.style.setProperty("--chat-text", theme.text);
+  panel.style.setProperty("--chat-muted", theme.muted);
+  panel.style.setProperty("--chat-accent", theme.accent);
+  if (picker) picker.value = CHAT_THEMES[themeName] ? themeName : "ocean";
+}
+
+function changeChatTheme(themeName) {
+  if (!currentConversationId || !CHAT_THEMES[themeName]) return;
+  try {
+    localStorage.setItem("dreamLibraryChatTheme:" + currentConversationId, themeName);
+  } catch (error) {
+    console.warn("Could not save chat theme on this device.", error);
+  }
+  applyChatTheme(themeName);
+}
+
 async function loadDirectMessages() {
   const list = document.getElementById("messagesList");
   if (!currentConversationId) return;
@@ -1928,8 +1990,8 @@ async function loadDirectMessages() {
       ? '<button class="outline-button" style="margin-top:6px;padding:4px 8px;font-size:12px;" onclick="deleteDirectMessage(\'' + message.id + '\')">Delete</button>'
       : "";
 
-    return '<div style="display:flex;justify-content:' + (mine ? "flex-end" : "flex-start") + ';margin:10px 0;">' +
-      '<div style="max-width:85%;padding:12px 15px;border-radius:12px;background:' + (mine ? "#1c5d9f" : "#102845") + ';border:1px solid #35577f;">' +
+    return '<div class="chat-message-row ' + (mine ? "mine" : "theirs") + '">' +
+      '<div class="chat-message-bubble ' + (mine ? "outgoing" : "incoming") + '">' +
       messageBody +
       '<small class="meta">' + (mine ? "You" : "Dreamer") + ' · ' + escapeHTML(time) + ' ' + receipt + '</small>' +
       deleteButton +
