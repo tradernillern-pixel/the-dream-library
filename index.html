@@ -1114,8 +1114,26 @@ See who is interacting with your dreams.
       <h3 id="messageChatTitle">Conversation</h3>
       <span class="chat-theme-caption">Personalise this conversation</span>
     </div>
-    <button class="outline-button" onclick="closeMessageChat()">← Back</button>
+    <div class="chat-actions">
+      <button type="button" class="chat-menu-button" aria-label="Conversation options" aria-expanded="false" onclick="toggleChatMenu()">⋮</button>
+      <div id="chatOptionsMenu" class="chat-options-menu" style="display:none;">
+        <button type="button" onclick="viewChatPartnerProfile()">👤 View profile</button>
+        <button type="button" onclick="focusChatTheme()">🎨 Chat theme</button>
+        <button type="button" onclick="toggleChatWallpaperMenu()">🖼️ Change wallpaper</button>
+        <div id="chatWallpaperOptions" class="chat-wallpaper-options" style="display:none;">
+          <button type="button" onclick="setChatWallpaper('none')">Default</button>
+          <button type="button" onclick="setChatWallpaper('stars')">Midnight stars</button>
+          <button type="button" onclick="setChatWallpaper('ocean')">Ocean waves</button>
+          <button type="button" onclick="setChatWallpaper('sunset')">Soft sunset</button>
+        </div>
+        <button type="button" id="chatMuteButton" onclick="toggleChatMute()">🔕 Mute notifications</button>
+        <button type="button" onclick="blockCurrentChatPartner()">🚫 Block dreamer</button>
+        <button type="button" class="chat-menu-danger" onclick="reportCurrentChatPartner()">⚑ Report dreamer</button>
+      </div>
+      <button class="outline-button chat-back-button" onclick="closeMessageChat()">← Back</button>
+    </div>
   </div>
+  <div id="chatPartnerProfileCard" class="chat-partner-profile" style="display:none;"></div>
   <div class="chat-theme-picker">
     <label for="chatThemeSelect">Chat theme</label>
     <select id="chatThemeSelect" onchange="changeChatTheme(this.value)" aria-label="Choose chat theme">
@@ -1550,6 +1568,129 @@ if (pageId === "messages") {
    DIRECT MESSAGING
    ================================================== */
 
+function toggleChatMenu() {
+  const menu = document.getElementById("chatOptionsMenu");
+  const button = document.querySelector(".chat-menu-button");
+  if (!menu) return;
+  const opening = menu.style.display === "none";
+  menu.style.display = opening ? "block" : "none";
+  if (button) button.setAttribute("aria-expanded", opening ? "true" : "false");
+}
+
+function closeChatMenu() {
+  const menu = document.getElementById("chatOptionsMenu");
+  const button = document.querySelector(".chat-menu-button");
+  if (menu) menu.style.display = "none";
+  if (button) button.setAttribute("aria-expanded", "false");
+}
+
+function focusChatTheme() {
+  closeChatMenu();
+  const picker = document.getElementById("chatThemeSelect");
+  if (picker) {
+    picker.focus();
+    picker.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+}
+
+function chatPreferenceKey(kind, conversationId) {
+  return "dreamLibrary" + kind + ":" + conversationId;
+}
+
+function isChatMuted(conversationId) {
+  try { return localStorage.getItem(chatPreferenceKey("Muted", conversationId)) === "true"; }
+  catch (error) { return false; }
+}
+
+function updateChatMuteButton() {
+  const button = document.getElementById("chatMuteButton");
+  if (button && currentConversationId) {
+    button.textContent = isChatMuted(currentConversationId) ? "🔔 Unmute notifications" : "🔕 Mute notifications";
+  }
+}
+
+function toggleChatMute() {
+  if (!currentConversationId) return;
+  const muted = !isChatMuted(currentConversationId);
+  try { localStorage.setItem(chatPreferenceKey("Muted", currentConversationId), muted ? "true" : "false"); }
+  catch (error) { alert("This browser could not save the notification preference."); return; }
+  updateChatMuteButton();
+  closeChatMenu();
+  loadConversations();
+  document.getElementById("messageStatus").textContent = muted
+    ? "Notifications muted for this chat on this device."
+    : "Notifications enabled for this chat on this device.";
+}
+
+function toggleChatWallpaperMenu() {
+  const panel = document.getElementById("chatWallpaperOptions");
+  if (panel) panel.style.display = panel.style.display === "none" ? "block" : "none";
+}
+
+function setChatWallpaper(wallpaper) {
+  if (!currentConversationId) return;
+  const allowed = ["none", "stars", "ocean", "sunset"];
+  if (!allowed.includes(wallpaper)) return;
+  try { localStorage.setItem(chatPreferenceKey("Wallpaper", currentConversationId), wallpaper); }
+  catch (error) { alert("This browser could not save the wallpaper."); return; }
+  applyChatWallpaper(wallpaper);
+  closeChatMenu();
+  document.getElementById("messageStatus").textContent = "Chat wallpaper updated on this device.";
+}
+
+function applyChatWallpaper(wallpaper) {
+  const list = document.getElementById("messagesList");
+  if (!list) return;
+  const backgrounds = {
+    none: "",
+    stars: "radial-gradient(circle at 15% 20%,rgba(117,155,210,.22) 1px,transparent 2px),radial-gradient(circle at 75% 65%,rgba(117,155,210,.18) 1px,transparent 2px),linear-gradient(135deg,#101d35,#172943)",
+    ocean: "radial-gradient(ellipse at 20% 100%,rgba(20,130,170,.35),transparent 55%),linear-gradient(135deg,#082b42,#123d56)",
+    sunset: "radial-gradient(ellipse at 85% 10%,rgba(238,153,119,.3),transparent 48%),linear-gradient(135deg,#38243c,#684052)"
+  };
+  list.style.backgroundImage = backgrounds[wallpaper] || "";
+}
+
+async function viewChatPartnerProfile() {
+  if (!currentChatPartnerId) return;
+  closeChatMenu();
+  const card = document.getElementById("chatPartnerProfileCard");
+  if (!card) return;
+  card.style.display = "block";
+  card.innerHTML = "<p class='meta'>Loading dreamer profile...</p>";
+  const result = await supabaseClient.from("profiles")
+    .select("display_name,pseudonym,bio,avatar_url")
+    .eq("user_id", currentChatPartnerId)
+    .maybeSingle();
+  if (result.error) {
+    card.innerHTML = "<p class='meta'>Unable to load this profile.</p>";
+    return;
+  }
+  const profile = result.data || {};
+  const name = profile.display_name || profile.pseudonym || "Dreamer";
+  const avatar = profile.avatar_url
+    ? '<img src="' + escapeHTML(profile.avatar_url) + '" alt="Dreamer avatar">'
+    : '<span>🌙</span>';
+  card.innerHTML = '<button type="button" class="profile-card-close" onclick="document.getElementById(\'chatPartnerProfileCard\').style.display=\'none\'">✕</button>' +
+    '<div class="chat-profile-avatar">' + avatar + '</div>' +
+    '<div class="chat-profile-copy"><strong>' + escapeHTML(name) + '</strong><p>' + escapeHTML(profile.bio || "No bio yet.") + '</p></div>';
+}
+
+async function blockCurrentChatPartner() {
+  if (!currentChatPartnerId) return;
+  const partnerId = currentChatPartnerId;
+  closeChatMenu();
+  await blockDreamer(partnerId);
+  closeMessageChat();
+  await loadConversations();
+}
+
+async function reportCurrentChatPartner() {
+  if (!currentChatPartnerId) return;
+  const partnerId = currentChatPartnerId;
+  closeChatMenu();
+  await reportContent("user", partnerId, partnerId);
+}
+
 function focusDreamerSearch() {
   const workspace = document.getElementById("messagesWorkspace");
   if (workspace) workspace.classList.remove("mobile-chat-open");
@@ -1725,7 +1866,9 @@ async function loadConversations() {
     unreadCounts[message.conversation_id] = (unreadCounts[message.conversation_id] || 0) + 1;
   });
 
-  const totalUnread = (unreadMessages || []).length;
+  const totalUnread = (unreadMessages || []).filter(function(message) {
+    return !isChatMuted(message.conversation_id);
+  }).length;
   const messagesBadge = document.getElementById("messagesBadge");
   if (messagesBadge) {
     messagesBadge.textContent = totalUnread > 99 ? "99+" : String(totalUnread);
@@ -1746,7 +1889,7 @@ async function loadConversations() {
       return message.conversation_id === conversation.id;
     });
     const preview = latest ? latest.content : "Start your conversation";
-    const unreadCount = unreadCounts[conversation.id] || 0;
+    const unreadCount = isChatMuted(conversation.id) ? 0 : (unreadCounts[conversation.id] || 0);
     const unreadBadge = unreadCount
       ? `<span style="display:inline-block;background:#239b62;color:white;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:bold;">${unreadCount > 99 ? "99+" : unreadCount}</span>`
       : "";
@@ -1817,6 +1960,13 @@ async function openDirectConversation(conversationId, otherUserId) {
   const selectedChat = document.querySelector(".conversation-item[onclick*=\"" + conversationId + "\"]");
   if (selectedChat) selectedChat.classList.add("active");
   applyChatTheme(getSavedChatTheme(conversationId));
+  let savedWallpaper = "none";
+  try { savedWallpaper = localStorage.getItem(chatPreferenceKey("Wallpaper", conversationId)) || "none"; } catch (error) {}
+  applyChatWallpaper(savedWallpaper);
+  updateChatMuteButton();
+  closeChatMenu();
+  const profileCard = document.getElementById("chatPartnerProfileCard");
+  if (profileCard) profileCard.style.display = "none";
   document.getElementById("messageStatus").textContent = "";
   await loadDirectMessages();
   await startTypingRealtime(conversationId);
@@ -2183,6 +2333,9 @@ function closeMessageChat() {
   currentConversationId = null;
   currentChatPartnerId = null;
   document.getElementById("messageChatPanel").style.display = "none";
+  closeChatMenu();
+  const profileCard = document.getElementById("chatPartnerProfileCard");
+  if (profileCard) profileCard.style.display = "none";
   const emptyState = document.getElementById("messageEmptyState");
   if (emptyState) emptyState.style.display = "flex";
   const workspace = document.getElementById("messagesWorkspace");
