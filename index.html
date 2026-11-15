@@ -1118,6 +1118,7 @@ See who is interacting with your dreams.
       <button type="button" class="chat-menu-button" aria-label="Conversation options" aria-expanded="false" onclick="toggleChatMenu()">⋮</button>
       <div id="chatOptionsMenu" class="chat-options-menu" style="display:none;">
         <button type="button" onclick="viewChatPartnerProfile()">👤 View profile</button>
+        <button type="button" onclick="openChatSettingsScreen()">⚙️ Message settings</button>
         <button type="button" onclick="focusChatTheme()">🎨 Chat theme</button>
         <button type="button" onclick="toggleChatWallpaperMenu()">🖼️ Change wallpaper</button>
         <div id="chatWallpaperOptions" class="chat-wallpaper-options" style="display:none;">
@@ -1133,6 +1134,7 @@ See who is interacting with your dreams.
       <button class="outline-button chat-back-button" onclick="closeMessageChat()">← Back</button>
     </div>
   </div>
+  <div id="chatConversationContent">
   <div id="chatPartnerProfileCard" class="chat-partner-profile" style="display:none;"></div>
   <div class="chat-theme-picker">
     <label for="chatThemeSelect">Chat theme</label>
@@ -1156,6 +1158,43 @@ See who is interacting with your dreams.
   </div>
   <p id="chatImageSelection" class="meta"></p>
   <p id="messageStatus" class="meta"></p>
+  </div>
+  <div id="chatSettingsScreen" class="chat-settings-screen" style="display:none;">
+    <div class="chat-settings-heading">
+      <button type="button" class="outline-button" onclick="closeChatSettingsScreen()">← Back to chat</button>
+      <div><h3>Message settings</h3><p class="meta">Personalise this conversation</p></div>
+    </div>
+    <div class="chat-settings-section">
+      <h4>🎨 Appearance</h4>
+      <label for="chatThemeSelect">Chat theme</label>
+      <select id="chatThemeSelect" onchange="changeChatTheme(this.value)" aria-label="Choose chat theme">
+        <option value="ocean">🌊 Ocean Blue</option>
+        <option value="midnight">🌌 Midnight</option>
+        <option value="rose">🌹 Rose</option>
+        <option value="lavender">💜 Lavender</option>
+        <option value="forest">🌿 Forest</option>
+        <option value="sunset">🌅 Sunset</option>
+      </select>
+      <h4>🖼️ Chat wallpaper</h4>
+      <div class="chat-wallpaper-grid">
+        <button type="button" onclick="setChatWallpaper('none')">Default</button>
+        <button type="button" onclick="setChatWallpaper('stars')">Midnight stars</button>
+        <button type="button" onclick="setChatWallpaper('ocean')">Ocean waves</button>
+        <button type="button" onclick="setChatWallpaper('sunset')">Soft sunset</button>
+      </div>
+    </div>
+    <div class="chat-settings-section">
+      <h4>🔔 Notifications</h4>
+      <p class="meta">Mute or enable notifications for this conversation on this device.</p>
+      <button type="button" id="chatMuteButton" class="outline-button" onclick="toggleChatMute()">🔕 Mute notifications</button>
+    </div>
+    <div class="chat-settings-section">
+      <h4>🛡️ Safety</h4>
+      <button type="button" class="outline-button" onclick="viewChatPartnerProfile()">👤 View profile</button>
+      <button type="button" class="danger-button" onclick="blockCurrentChatPartner()">🚫 Block dreamer</button>
+      <button type="button" class="danger-button" onclick="reportCurrentChatPartner()">⚑ Report dreamer</button>
+    </div>
+  </div>
 </div>
   </main>
 </div>
@@ -1585,12 +1624,30 @@ function closeChatMenu() {
 }
 
 function focusChatTheme() {
-  closeChatMenu();
+  openChatSettingsScreen();
   const picker = document.getElementById("chatThemeSelect");
-  if (picker) {
-    picker.focus();
-    picker.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
+  if (picker) picker.focus();
+}
+
+function openChatSettingsScreen() {
+  if (!currentConversationId) return;
+  closeChatMenu();
+  const conversation = document.getElementById("chatConversationContent");
+  const settings = document.getElementById("chatSettingsScreen");
+  if (conversation) conversation.style.display = "none";
+  if (settings) settings.style.display = "block";
+  const title = document.getElementById("messageChatTitle");
+  if (title) title.textContent = "⚙️ Message settings";
+  updateChatMuteButton();
+}
+
+function closeChatSettingsScreen() {
+  const conversation = document.getElementById("chatConversationContent");
+  const settings = document.getElementById("chatSettingsScreen");
+  if (settings) settings.style.display = "none";
+  if (conversation) conversation.style.display = "block";
+  const title = document.getElementById("messageChatTitle");
+  if (title) title.textContent = "💬 " + (currentChatPartnerName || "Conversation");
 }
 
 function chatPreferenceKey(kind, conversationId) {
@@ -1942,6 +1999,7 @@ async function startDirectConversation(otherUserId) {
 async function openDirectConversation(conversationId, otherUserId) {
   currentConversationId = conversationId;
   currentChatPartnerId = otherUserId;
+  currentChatPartnerName = "Conversation";
 
   const { data: profile } = await supabaseClient
     .from("profiles")
@@ -1950,6 +2008,7 @@ async function openDirectConversation(conversationId, otherUserId) {
     .maybeSingle();
 
   const name = profile ? (profile.display_name || profile.pseudonym || "Dreamer") : "Dreamer";
+  currentChatPartnerName = name;
   document.getElementById("messageChatTitle").textContent = "💬 " + name;
   document.getElementById("messageChatPanel").style.display = "block";
   const emptyState = document.getElementById("messageEmptyState");
@@ -2332,6 +2391,11 @@ function closeMessageChat() {
   stopMessageRealtime();
   currentConversationId = null;
   currentChatPartnerId = null;
+  currentChatPartnerName = "Conversation";
+  const settingsScreen = document.getElementById("chatSettingsScreen");
+  if (settingsScreen) settingsScreen.style.display = "none";
+  const conversationContent = document.getElementById("chatConversationContent");
+  if (conversationContent) conversationContent.style.display = "block";
   document.getElementById("messageChatPanel").style.display = "none";
   closeChatMenu();
   const profileCard = document.getElementById("chatPartnerProfileCard");
