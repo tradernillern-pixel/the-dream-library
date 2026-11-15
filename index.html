@@ -1138,42 +1138,69 @@ See who is interacting with your dreams.
   <div id="chatSettingsScreen" class="chat-settings-screen" style="display:none;">
     <div class="chat-settings-heading">
       <button type="button" class="outline-button" onclick="closeChatSettingsScreen()">← Back to chat</button>
-      <div><h3>Message settings</h3><p class="meta">Personalise this conversation</p></div>
+      <div><p class="chat-settings-eyebrow">YOUR CONVERSATION</p><h3>Conversation centre</h3><p class="meta">Manage your chat, privacy and experience.</p></div>
     </div>
-    <div class="chat-settings-section">
-      <h4>🎨 Appearance</h4>
-      <label for="chatThemeSelect">Chat theme</label>
-      <select id="chatThemeSelect" onchange="changeChatTheme(this.value)" aria-label="Choose chat theme">
-        <option value="ocean">🌊 Ocean Blue</option>
-        <option value="midnight">🌌 Midnight</option>
-        <option value="rose">🌹 Rose</option>
-        <option value="lavender">💜 Lavender</option>
-        <option value="forest">🌿 Forest</option>
-        <option value="sunset">🌅 Sunset</option>
-      </select>
-      <h4>🖼️ Chat wallpaper</h4>
-      <div class="chat-wallpaper-grid">
-        <button type="button" onclick="setChatWallpaper('none')">Default</button>
-        <button type="button" onclick="setChatWallpaper('stars')">Midnight stars</button>
-        <button type="button" onclick="setChatWallpaper('ocean')">Ocean waves</button>
-        <button type="button" onclick="setChatWallpaper('sunset')">Soft sunset</button>
+    <div id="chatSettingsHome" class="chat-settings-home">
+      <button type="button" class="chat-settings-tile profile-tile" onclick="openChatSettingsSection('profile')">
+        <span class="chat-settings-tile-icon">👤</span><span><strong>View profile</strong><small>See who you're chatting with</small></span><b>›</b>
+      </button>
+      <button type="button" class="chat-settings-tile" onclick="openChatSettingsSection('preferences')">
+        <span class="chat-settings-tile-icon">🎨</span><span><strong>Message settings</strong><small>Theme, wallpaper and notifications</small></span><b>›</b>
+      </button>
+      <button type="button" class="chat-settings-tile" onclick="openChatSettingsSection('disappearing')">
+        <span class="chat-settings-tile-icon">⏳</span><span><strong>Disappearing messages</strong><small>Choose how long messages should remain</small></span><b>›</b>
+      </button>
+      <button type="button" class="chat-settings-tile" onclick="openChatSettingsSection('search')">
+        <span class="chat-settings-tile-icon">🔎</span><span><strong>Search</strong><small>Find something in this conversation</small></span><b>›</b>
+      </button>
+      <button type="button" class="chat-settings-tile" onclick="openChatSettingsSection('restricted')">
+        <span class="chat-settings-tile-icon">🛡️</span><span><strong>Restricted chat</strong><small>More control over who can reach you</small></span><b>›</b>
+      </button>
+      <button type="button" class="chat-settings-tile" onclick="openChatSettingsSection('encryption')">
+        <span class="chat-settings-tile-icon">🔐</span><span><strong>Encryption</strong><small>Understand how this conversation is protected</small></span><b>›</b>
+      </button>
+    </div>
+
+    <div id="chatSettingsSection-profile" class="chat-settings-subpage" style="display:none;">
+      <button type="button" class="chat-settings-back" onclick="returnToChatSettings()">← All conversation settings</button>
+      <div class="chat-settings-section"><h4>👤 Dreamer profile</h4><div id="chatSettingsProfileCard" class="chat-partner-profile"><p class="meta">Loading dreamer profile...</p></div></div>
+    </div>
+
+    <div id="chatSettingsSection-preferences" class="chat-settings-subpage" style="display:none;">
+      <button type="button" class="chat-settings-back" onclick="returnToChatSettings()">← All conversation settings</button>
+      <div class="chat-settings-section">
+        <h4>🎨 Appearance</h4><label for="chatThemeSelect">Chat theme</label>
+        <select id="chatThemeSelect" onchange="changeChatTheme(this.value)" aria-label="Choose chat theme">
+          <option value="ocean">🌊 Ocean Blue</option><option value="midnight">🌌 Midnight</option><option value="rose">🌹 Rose</option><option value="lavender">💜 Lavender</option><option value="forest">🌿 Forest</option><option value="sunset">🌅 Sunset</option>
+        </select>
+        <h4>🖼️ Chat wallpaper</h4><div class="chat-wallpaper-grid">
+          <button type="button" onclick="setChatWallpaper('none')">Default</button><button type="button" onclick="setChatWallpaper('stars')">Midnight stars</button><button type="button" onclick="setChatWallpaper('ocean')">Ocean waves</button><button type="button" onclick="setChatWallpaper('sunset')">Soft sunset</button>
+        </div>
       </div>
+      <div class="chat-settings-section"><h4>🔔 Notifications</h4><p class="meta">Mute or enable notifications for this conversation on this device.</p><button type="button" id="chatMuteButton" class="outline-button" onclick="toggleChatMute()">🔕 Mute notifications</button></div>
     </div>
-    <div class="chat-settings-section">
-      <h4>🔔 Notifications</h4>
-      <p class="meta">Mute or enable notifications for this conversation on this device.</p>
-      <button type="button" id="chatMuteButton" class="outline-button" onclick="toggleChatMute()">🔕 Mute notifications</button>
+
+    <div id="chatSettingsSection-disappearing" class="chat-settings-subpage" style="display:none;">
+      <button type="button" class="chat-settings-back" onclick="returnToChatSettings()">← All conversation settings</button>
+      <div class="chat-settings-feature-card"><span class="chat-settings-feature-icon">⏳</span><h4>Disappearing messages</h4><p>Set messages to expire automatically after a chosen period.</p><span class="chat-feature-status">COMING SOON</span><p class="meta">This needs a secure server-side expiry and cleanup process before it can be enabled. No messages are currently set to disappear.</p></div>
     </div>
-    <div class="chat-settings-section">
-      <h4>👤 Dreamer profile</h4>
-      <div id="chatSettingsProfileCard" class="chat-partner-profile"><p class="meta">Loading dreamer profile...</p></div>
+
+    <div id="chatSettingsSection-search" class="chat-settings-subpage" style="display:none;">
+      <button type="button" class="chat-settings-back" onclick="returnToChatSettings()">← All conversation settings</button>
+      <div class="chat-settings-section"><h4>🔎 Search this conversation</h4><p class="meta">Search the messages currently loaded in this chat.</p><input id="chatMessageSearchInput" type="search" placeholder="Type a word or phrase..." oninput="searchCurrentConversation(this.value)"><p id="chatMessageSearchCount" class="meta">Enter a search term to find messages.</p><button type="button" class="outline-button" onclick="clearConversationSearch()">Clear search</button></div>
     </div>
-    <div class="chat-settings-section">
-      <h4>🛡️ Safety</h4>
-      <button type="button" class="danger-button" onclick="blockCurrentChatPartner()">🚫 Block dreamer</button>
-      <button type="button" class="danger-button" onclick="reportCurrentChatPartner()">⚑ Report dreamer</button>
+
+    <div id="chatSettingsSection-restricted" class="chat-settings-subpage" style="display:none;">
+      <button type="button" class="chat-settings-back" onclick="returnToChatSettings()">← All conversation settings</button>
+      <div class="chat-settings-feature-card"><span class="chat-settings-feature-icon">🛡️</span><h4>Restricted chat</h4><p>Keep a conversation out of your main inbox and control how interactions reach you.</p><span class="chat-feature-status">IN DEVELOPMENT</span><p class="meta">A proper restricted mode needs its own database rules and inbox behaviour. Blocking is available below in Safety, and is not the same as restricting.</p></div>
+      <div class="chat-settings-section"><h4>Safety options</h4><button type="button" class="danger-button" onclick="blockCurrentChatPartner()">🚫 Block dreamer</button><button type="button" class="danger-button" onclick="reportCurrentChatPartner()">⚑ Report dreamer</button></div>
     </div>
-  </div>
+
+    <div id="chatSettingsSection-encryption" class="chat-settings-subpage" style="display:none;">
+      <button type="button" class="chat-settings-back" onclick="returnToChatSettings()">← All conversation settings</button>
+      <div class="chat-settings-feature-card"><span class="chat-settings-feature-icon">🔐</span><h4>Encryption & privacy</h4><span class="chat-feature-status chat-feature-status-warning">NOT END-TO-END ENCRYPTED</span><p>Messages are sent over encrypted HTTPS connections, but The Dream Library does not currently provide end-to-end encryption. This means message contents are not protected by keys held exclusively by the two chat participants.</p><p class="meta">Do not treat this chat as a place for highly sensitive information. True end-to-end encryption requires a dedicated cryptographic design, secure key management and independent security testing.</p></div>
+    </div>
+  </div>div>
 </div>
   </main>
 </div>
@@ -1619,9 +1646,9 @@ function openChatSettingsScreen() {
   const panel = document.getElementById("messageChatPanel");
   if (panel) panel.classList.add("chat-settings-open");
   const title = document.getElementById("messageChatTitle");
-  if (title) title.textContent = "⚙️ Message settings";
+  if (title) title.textContent = "⚙️ Conversation centre";
+  returnToChatSettings();
   updateChatMuteButton();
-  viewChatPartnerProfile();
 }
 
 function closeChatSettingsScreen() {
@@ -1631,8 +1658,57 @@ function closeChatSettingsScreen() {
   if (conversation) conversation.style.display = "block";
   const panel = document.getElementById("messageChatPanel");
   if (panel) panel.classList.remove("chat-settings-open");
+  const searchInput = document.getElementById("chatMessageSearchInput");
+  if (searchInput) searchInput.value = "";
+  clearConversationSearch();
   const title = document.getElementById("messageChatTitle");
   if (title) title.textContent = "💬 " + (currentChatPartnerName || "Conversation");
+}
+
+function returnToChatSettings() {
+  const home = document.getElementById("chatSettingsHome");
+  if (home) home.style.display = "grid";
+  document.querySelectorAll(".chat-settings-subpage").forEach(function(section) { section.style.display = "none"; });
+  const title = document.getElementById("messageChatTitle");
+  if (title) title.textContent = "⚙️ Conversation centre";
+}
+
+function openChatSettingsSection(section) {
+  const allowed = ["profile","preferences","disappearing","search","restricted","encryption"];
+  if (!allowed.includes(section)) return;
+  const home = document.getElementById("chatSettingsHome");
+  if (home) home.style.display = "none";
+  document.querySelectorAll(".chat-settings-subpage").forEach(function(item) { item.style.display = "none"; });
+  const target = document.getElementById("chatSettingsSection-" + section);
+  if (target) target.style.display = "block";
+  const titles = {profile:"👤 View profile",preferences:"🎨 Message settings",disappearing:"⏳ Disappearing messages",search:"🔎 Search",restricted:"🛡️ Restricted chat",encryption:"🔐 Encryption"};
+  const title = document.getElementById("messageChatTitle");
+  if (title) title.textContent = titles[section] || "Conversation settings";
+  if (section === "profile") viewChatPartnerProfile();
+  if (section === "preferences") updateChatMuteButton();
+  if (section === "search") {
+    const input = document.getElementById("chatMessageSearchInput");
+    if (input) input.focus();
+  }
+}
+
+function searchCurrentConversation(term) {
+  const query = (term || "").trim().toLowerCase();
+  const rows = Array.from(document.querySelectorAll("#messagesList .chat-message-row"));
+  let matches = 0;
+  rows.forEach(function(row) {
+    const match = !query || row.textContent.toLowerCase().includes(query);
+    row.style.display = match ? "" : "none";
+    if (query && match) matches++;
+  });
+  const count = document.getElementById("chatMessageSearchCount");
+  if (count) count.textContent = query ? matches + " matching message" + (matches === 1 ? "" : "s") : "Enter a search term to find messages.";
+}
+
+function clearConversationSearch() {
+  document.querySelectorAll("#messagesList .chat-message-row").forEach(function(row) { row.style.display = ""; });
+  const count = document.getElementById("chatMessageSearchCount");
+  if (count) count.textContent = "Enter a search term to find messages.";
 }
 
 function chatPreferenceKey(kind, conversationId) {
@@ -2377,6 +2453,7 @@ function closeMessageChat() {
   currentChatPartnerName = "Conversation";
   const settingsScreen = document.getElementById("chatSettingsScreen");
   if (settingsScreen) settingsScreen.style.display = "none";
+  returnToChatSettings();
   const chatPanel = document.getElementById("messageChatPanel");
   if (chatPanel) chatPanel.classList.remove("chat-settings-open");
   const conversationContent = document.getElementById("chatConversationContent");
