@@ -1821,7 +1821,6 @@ async function openDirectConversation(conversationId, otherUserId) {
   await loadDirectMessages();
   await startTypingRealtime(conversationId);
   await startMessageRealtime(conversationId);
-  document.getElementById("messageChatPanel").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 
