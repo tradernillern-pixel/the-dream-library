@@ -2688,7 +2688,7 @@ dreamCommentsChannel = supabaseClient
 .on(
 "postgres_changes",
 {
-event: "INSERT",
+event: "*",
 schema: "public",
 table: "dream_comments",
 filter: "dream_id=eq." + dreamId
