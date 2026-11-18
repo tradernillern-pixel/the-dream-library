@@ -4152,9 +4152,19 @@ return `
 <p style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHTML(comment.content)}</p>
 <div class="button-row">
 ${!isReply && currentUser && repliesEnabled ? `<button class="outline-button" onclick="toggleDreamReplyForm('${comment.id}')">↩️ Reply</button>` : ""}
-${ownComment ? `<button class="outline-button" onclick="deleteDreamComment('${comment.id}')">🗑️ Delete</button>` : ""}
+${ownComment ? `<button class="outline-button" onclick="toggleDreamCommentEdit('${comment.id}')">✏️ Edit</button><button class="outline-button" onclick="deleteDreamComment('${comment.id}')">🗑️ Delete</button>` : ""}
 ${!ownComment && currentUser ? `<button class="outline-button" onclick="reportContent(\'comment\',\'${comment.id}\',\'${comment.user_id}\')">🚩 Report</button>` : ""}
 </div>
+${ownComment ? `
+<div id="dreamCommentEditForm_${comment.id}" style="display:none;margin-top:10px;">
+<label for="dreamCommentEditInput_${comment.id}">Edit your comment</label>
+<textarea id="dreamCommentEditInput_${comment.id}" maxlength="1000" rows="3">${escapeHTML(comment.content)}</textarea>
+<div class="button-row">
+<button class="save-button" onclick="saveDreamCommentEdit('${comment.id}')">Save Changes</button>
+<button class="outline-button" onclick="toggleDreamCommentEdit('${comment.id}')">Cancel</button>
+</div>
+</div>
+` : ""}
 ${!isReply && currentUser && repliesEnabled ? `
 <div id="dreamReplyForm_${comment.id}" style="display:none;margin-top:10px;">
 <textarea id="dreamReplyInput_${comment.id}" maxlength="1000" rows="2" placeholder="Write a reply..."></textarea>
@@ -4259,6 +4269,68 @@ if (counter) counter.textContent = "0 / 1000";
 
 await loadDreamComments(currentDreamId);
 
+}
+
+
+async function toggleDreamCommentEdit(commentId) {
+const form = document.getElementById("dreamCommentEditForm_" + commentId);
+if (!form) return;
+
+const opening = form.style.display === "none";
+form.style.display = opening ? "block" : "none";
+
+if (opening) {
+const input = document.getElementById("dreamCommentEditInput_" + commentId);
+if (input) input.focus();
+}
+
+
+async function saveDreamCommentEdit(commentId) {
+const input = document.getElementById("dreamCommentEditInput_" + commentId);
+const content = input ? input.value.trim() : "";
+
+if (!content) {
+alert("A comment cannot be empty.");
+return;
+}
+
+if (content.length > 1000) {
+alert("Comments must be 1000 characters or fewer.");
+return;
+}
+
+const { data: userData } = await supabaseClient.auth.getUser();
+if (!userData.user) {
+alert("Please sign in first.");
+return;
+}
+
+const form = document.getElementById("dreamCommentEditForm_" + commentId);
+const buttons = form ? form.querySelectorAll("button") : [];
+buttons.forEach(button => button.disabled = true);
+
+const { data, error } = await supabaseClient
+.from("dream_comments")
+.update({ content: content })
+.eq("id", commentId)
+.eq("user_id", userData.user.id)
+.select("id")
+.maybeSingle();
+
+buttons.forEach(button => button.disabled = false);
+
+if (error) {
+console.error("Comment update error:", error);
+alert("Unable to update comment: " + error.message);
+return;
+}
+
+if (!data) {
+alert("Comment was not updated. It may no longer be available to edit.");
+return;
+}
+
+await loadDreamComments(currentDreamId);
 }
 
 
