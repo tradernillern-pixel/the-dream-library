@@ -2900,7 +2900,7 @@ row.innerHTML = `
   <small class="meta">${new Date(item.created_at).toLocaleString()}</small>
 `;
 row.addEventListener("click", function() {
-openNotification(item.id, item.dream_id);
+openNotification(item.id, item.dream_id, item.comment_id);
 });
 list.appendChild(row);
 });
@@ -2910,7 +2910,7 @@ await loadNotificationBadge();
 }
 
 
-async function openNotification(notificationId, dreamId) {
+async function openNotification(notificationId, dreamId, commentId) {
 
 const { error } = await supabaseClient
 .from("notifications")
@@ -2922,7 +2922,24 @@ console.error("Could not mark notification as read:", error);
 }
 
 await loadNotificationBadge();
-viewDream(dreamId);
+await viewDream(dreamId);
+
+if (commentId) {
+const target = document.getElementById("dreamComment_" + commentId);
+if (target) {
+target.scrollIntoView({ behavior: "smooth", block: "center" });
+target.style.transition = "background-color 0.25s ease, outline 0.25s ease";
+target.style.backgroundColor = "rgba(112, 183, 255, 0.16)";
+target.style.outline = "2px solid #70b7ff";
+target.style.outlineOffset = "3px";
+
+setTimeout(function() {
+target.style.backgroundColor = "";
+target.style.outline = "";
+target.style.outlineOffset = "";
+}, 2600);
+}
+}
 
 }
 
@@ -3905,7 +3922,7 @@ return;
 
 currentDreamId = id;
 
-showDreamDetails(data);
+await showDreamDetails(data);
 
 return;
 
@@ -3914,7 +3931,7 @@ return;
 
 currentDreamId = id;
 
-showDreamDetails(dream);
+await showDreamDetails(dream);
 
 }
 
@@ -4044,8 +4061,8 @@ showPage(
 "dream-details"
 );
 
-loadDreamComments(dream.id);
-startDreamCommentsRealtime(dream.id);
+await loadDreamComments(dream.id);
+await startDreamCommentsRealtime(dream.id);
 
 }
 
@@ -4146,7 +4163,7 @@ const date = new Date(comment.created_at).toLocaleString();
 const ownComment = currentUser && currentUser.id === comment.user_id;
 
 return `
-<div class="dream-item" style="margin:12px 0;padding:12px;${isReply ? "margin-left:22px;border-left:3px solid var(--accent, #8b7cf6);" : ""}">
+<div id="dreamComment_${comment.id}" class="dream-item" style="margin:12px 0;padding:12px;${isReply ? "margin-left:22px;border-left:3px solid var(--accent, #8b7cf6);" : ""}">
 <strong>${escapeHTML(author)}</strong>
 <small class="meta" style="display:block;">${escapeHTML(date)}</small>
 <p style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHTML(comment.content)}</p>
