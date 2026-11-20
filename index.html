@@ -1532,6 +1532,7 @@ let currentDreamId = null;
 let editingDreamId = null;
 let notificationChannel = null;
 let dreamCommentsChannel = null;
+let dreamCommentsRefreshTimer = null;
 let presenceChannel = null;
 let currentConversationId = null;
 let currentChatPartnerId = null;
@@ -2674,6 +2675,33 @@ async function stopPresence() {
    LIVE DREAM COMMENTS
    ================================================== */
 
+function scheduleDreamCommentsRefresh(dreamId) {
+
+if (
+currentDreamId !== dreamId ||
+!document.getElementById("dream-details")?.classList.contains("active")
+) {
+return;
+}
+
+if (dreamCommentsRefreshTimer) {
+clearTimeout(dreamCommentsRefreshTimer);
+}
+
+dreamCommentsRefreshTimer = setTimeout(function() {
+dreamCommentsRefreshTimer = null;
+
+if (
+currentDreamId === dreamId &&
+document.getElementById("dream-details")?.classList.contains("active")
+) {
+loadDreamComments(dreamId);
+}
+}, 120);
+
+}
+
+
 async function startDreamCommentsRealtime(dreamId) {
 
 if (!dreamId) return;
@@ -2683,22 +2711,49 @@ await supabaseClient.removeChannel(dreamCommentsChannel);
 dreamCommentsChannel = null;
 }
 
+const refreshCurrentDream = function() {
+scheduleDreamCommentsRefresh(dreamId);
+};
+
 dreamCommentsChannel = supabaseClient
 .channel("live-dream-comments-" + dreamId)
+
+// INSERT and UPDATE can be filtered by dream_id.
 .on(
 "postgres_changes",
 {
-event: "*",
+event: "INSERT",
 schema: "public",
 table: "dream_comments",
 filter: "dream_id=eq." + dreamId
 },
+refreshCurrentDream
+)
+.on(
+"postgres_changes",
+{
+event: "UPDATE",
+schema: "public",
+table: "dream_comments",
+filter: "dream_id=eq." + dreamId
+},
+refreshCurrentDream
+)
+
+// DELETE payloads normally include the primary key only.
+// Listen without a filter, then refresh only if that comment is
+// currently displayed inside this dream.
+.on(
+"postgres_changes",
+{
+event: "DELETE",
+schema: "public",
+table: "dream_comments"
+},
 function(payload) {
-if (
-currentDreamId === dreamId &&
-document.getElementById("dream-details")?.classList.contains("active")
-) {
-loadDreamComments(dreamId);
+const deletedId = payload.old && payload.old.id;
+if (deletedId && document.getElementById("dreamComment_" + deletedId)) {
+refreshCurrentDream();
 }
 }
 )
@@ -2715,6 +2770,11 @@ console.warn("Live dream comments connection:", status);
 
 
 async function stopDreamCommentsRealtime() {
+
+if (dreamCommentsRefreshTimer) {
+clearTimeout(dreamCommentsRefreshTimer);
+dreamCommentsRefreshTimer = null;
+}
 
 if (dreamCommentsChannel) {
 await supabaseClient.removeChannel(dreamCommentsChannel);
