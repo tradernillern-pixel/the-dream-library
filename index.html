@@ -2975,7 +2975,9 @@ const rawPreview = item.comment_id
 ? commentMap[item.comment_id]
 : null;
 
-const previewText = rawPreview
+const previewText = commentResult.error
+? "Comment preview is temporarily unavailable."
+: rawPreview
 ? (rawPreview.length > 140 ? rawPreview.slice(0, 137) + "…" : rawPreview)
 : "This comment is no longer available.";
 
