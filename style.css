@@ -659,3 +659,22 @@ body:not(.dark-mode) .message-empty-icon { background:#edf3fb; }
   .chat-settings-tile.profile-tile{grid-column:auto;}
   .chat-settings-feature-card{padding:20px;}
 }
+
+
+/* Notification comment previews */
+.notification-preview {
+  margin: 9px 0 10px;
+  padding: 9px 12px;
+  border-left: 2px solid #70b7ff;
+  border-radius: 0 9px 9px 0;
+  background: rgba(112, 183, 255, .08);
+  color: #c4d4e7;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+body:not(.dark-mode) .notification-preview {
+  background: #f2f7fd;
+  color: #617188;
+}
