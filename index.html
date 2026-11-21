@@ -2922,19 +2922,39 @@ return;
 const actorIds = [...new Set(notifications.map(item => item.actor_id))];
 const dreamIds = [...new Set(notifications.map(item => item.dream_id))];
 
-const [{ data: profiles }, { data: dreams }] = await Promise.all([
+const commentIds = [...new Set(
+notifications.map(item => item.comment_id).filter(Boolean)
+)];
+
+const [profileResult, dreamResult, commentResult] = await Promise.all([
 supabaseClient.from("profiles").select("user_id,display_name,pseudonym").in("user_id", actorIds),
-supabaseClient.from("dreams").select("id,title").in("id", dreamIds)
+supabaseClient.from("dreams").select("id,title").in("id", dreamIds),
+commentIds.length
+? supabaseClient.from("dream_comments").select("id,content").in("id", commentIds)
+: Promise.resolve({ data: [], error: null })
 ]);
 
+const profiles = profileResult.data || [];
+const dreams = dreamResult.data || [];
+const comments = commentResult.data || [];
+
+if (commentResult.error) {
+console.warn("Notification comment previews could not be loaded:", commentResult.error);
+}
+
 const profileMap = {};
-(profiles || []).forEach(profile => {
+profiles.forEach(profile => {
 profileMap[profile.user_id] = profile.display_name || profile.pseudonym || "A dreamer";
 });
 
 const dreamMap = {};
-(dreams || []).forEach(dream => {
+dreams.forEach(dream => {
 dreamMap[dream.id] = dream.title || "Untitled Dream";
+});
+
+const commentMap = {};
+comments.forEach(comment => {
+commentMap[comment.id] = comment.content || "";
 });
 
 list.innerHTML = "";
@@ -2947,6 +2967,22 @@ if (item.notification_type === "comment") message = "commented on";
 if (item.notification_type === "reply") message = "replied to your comment on";
 if (item.notification_type === "reaction") message = "reacted to";
 
+const needsCommentPreview =
+item.notification_type === "comment" ||
+item.notification_type === "reply";
+
+const rawPreview = item.comment_id
+? commentMap[item.comment_id]
+: null;
+
+const previewText = rawPreview
+? (rawPreview.length > 140 ? rawPreview.slice(0, 137) + "…" : rawPreview)
+: "This comment is no longer available.";
+
+const previewMarkup = needsCommentPreview
+? `<p class="notification-preview">“${escapeHTML(previewText)}”</p>`
+: "";
+
 const row = document.createElement("div");
 row.className = "card";
 row.style.marginBottom = "12px";
@@ -2957,6 +2993,7 @@ row.innerHTML = `
     <strong>${actor}</strong> ${message} <strong>"${title}"</strong>
     ${item.is_read ? "" : "<span class='meta'> • NEW</span>"}
   </p>
+  ${previewMarkup}
   <small class="meta">${new Date(item.created_at).toLocaleString()}</small>
 `;
 row.addEventListener("click", function() {
