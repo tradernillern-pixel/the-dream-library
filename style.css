@@ -678,3 +678,36 @@ body:not(.dark-mode) .notification-preview {
   background: #f2f7fd;
   color: #617188;
 }
+
+
+/* Notification list filters */
+.notification-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 16px;
+}
+.notification-filter-button {
+  min-width: 82px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.notification-filter-button.active {
+  background: #214d7d;
+  border-color: #8bc4ff;
+  color: #fff;
+}
+.notification-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(112, 183, 255, .2);
+  font-size: 11px;
+  line-height: 1;
+}
