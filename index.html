@@ -1065,6 +1065,10 @@ See who is interacting with your dreams.
     <p id="notificationSummary" class="meta">Your latest activity will appear here.</p>
     <button class="outline-button" onclick="markAllNotificationsRead()">Mark all as read</button>
   </div>
+  <div class="notification-filters" role="group" aria-label="Filter notifications">
+    <button id="notificationAllFilter" type="button" class="outline-button notification-filter-button active" aria-pressed="true" onclick="setNotificationFilter('all')">All</button>
+    <button id="notificationUnreadFilter" type="button" class="outline-button notification-filter-button" aria-pressed="false" onclick="setNotificationFilter('unread')">Unread <span id="notificationUnreadCount" class="notification-filter-count">0</span></button>
+  </div>
   <div id="notificationsList">
     <p class="empty">Loading notifications...</p>
   </div>
@@ -2880,6 +2884,33 @@ badge.style.display = "none";
 }
 
 
+let notificationFilter = "all";
+
+function syncNotificationFilters(unreadCount) {
+const allButton = document.getElementById("notificationAllFilter");
+const unreadButton = document.getElementById("notificationUnreadFilter");
+const countLabel = document.getElementById("notificationUnreadCount");
+
+if (countLabel) countLabel.textContent = String(unreadCount);
+
+if (allButton) {
+allButton.classList.toggle("active", notificationFilter === "all");
+allButton.setAttribute("aria-pressed", String(notificationFilter === "all"));
+}
+
+if (unreadButton) {
+unreadButton.classList.toggle("active", notificationFilter === "unread");
+unreadButton.setAttribute("aria-pressed", String(notificationFilter === "unread"));
+}
+}
+
+function setNotificationFilter(filter) {
+notificationFilter = filter === "unread" ? "unread" : "all";
+const countLabel = document.getElementById("notificationUnreadCount");
+syncNotificationFilters(Number(countLabel ? countLabel.textContent : 0));
+loadNotifications();
+}
+
 async function loadNotifications() {
 
 const list = document.getElementById("notificationsList");
@@ -2888,6 +2919,7 @@ if (!list) return;
 
 const { data: userData } = await supabaseClient.auth.getUser();
 if (!userData.user) {
+syncNotificationFilters(0);
 list.innerHTML = "<p class='empty'>Please sign in to view your notifications.</p>";
 summary.textContent = "Sign in to see your activity.";
 return;
@@ -2909,6 +2941,7 @@ return;
 
 const notifications = rows || [];
 const unread = notifications.filter(item => !item.is_read).length;
+syncNotificationFilters(unread);
 summary.textContent = unread
 ? unread + " unread notification" + (unread === 1 ? "" : "s")
 : "You're all caught up. 🌙";
@@ -2919,11 +2952,21 @@ await loadNotificationBadge();
 return;
 }
 
-const actorIds = [...new Set(notifications.map(item => item.actor_id))];
-const dreamIds = [...new Set(notifications.map(item => item.dream_id))];
+const visibleNotifications = notificationFilter === "unread"
+? notifications.filter(item => !item.is_read)
+: notifications;
+
+if (!visibleNotifications.length) {
+list.innerHTML = "<p class='empty'>You're all caught up. No unread notifications. 🌙</p>";
+await loadNotificationBadge();
+return;
+}
+
+const actorIds = [...new Set(visibleNotifications.map(item => item.actor_id))];
+const dreamIds = [...new Set(visibleNotifications.map(item => item.dream_id))];
 
 const commentIds = [...new Set(
-notifications.map(item => item.comment_id).filter(Boolean)
+visibleNotifications.map(item => item.comment_id).filter(Boolean)
 )];
 
 const [profileResult, dreamResult, commentResult] = await Promise.all([
@@ -2959,7 +3002,7 @@ commentMap[comment.id] = comment.content || "";
 
 list.innerHTML = "";
 
-notifications.forEach(item => {
+visibleNotifications.forEach(item => {
 const actor = escapeHTML(profileMap[item.actor_id] || "A dreamer");
 const title = escapeHTML(dreamMap[item.dream_id] || "your dream");
 let message = "interacted with";
