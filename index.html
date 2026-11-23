@@ -2866,6 +2866,7 @@ return;
 const { count, error } = await supabaseClient
 .from("notifications")
 .select("id", { count: "exact", head: true })
+.eq("recipient_id", userData.user.id)
 .eq("is_read", false);
 
 if (error) {
@@ -2930,6 +2931,7 @@ list.innerHTML = "<p class='empty'>Loading notifications...</p>";
 const { data: rows, error } = await supabaseClient
 .from("notifications")
 .select("id,actor_id,dream_id,comment_id,notification_type,is_read,created_at")
+.eq("recipient_id", userData.user.id)
 .order("created_at", { ascending: false })
 .limit(50);
 
@@ -3054,10 +3056,14 @@ await loadNotificationBadge();
 
 async function openNotification(notificationId, dreamId, commentId) {
 
+const { data: userData } = await supabaseClient.auth.getUser();
+if (!userData.user) return;
+
 const { error } = await supabaseClient
 .from("notifications")
 .update({ is_read: true })
-.eq("id", notificationId);
+.eq("id", notificationId)
+.eq("recipient_id", userData.user.id);
 
 if (error) {
 console.error("Could not mark notification as read:", error);
@@ -3097,6 +3103,7 @@ return;
 const { error } = await supabaseClient
 .from("notifications")
 .update({ is_read: true })
+.eq("recipient_id", userData.user.id)
 .eq("is_read", false);
 
 if (error) {
