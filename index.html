@@ -2912,6 +2912,50 @@ syncNotificationFilters(Number(countLabel ? countLabel.textContent : 0));
 loadNotifications();
 }
 
+function groupNotificationsByActivity(notifications) {
+  const groups = [];
+  const recentGroups = new Map();
+  const groupingWindowMs = 24 * 60 * 60 * 1000;
+
+  (notifications || []).forEach(function(item) {
+    const canGroup =
+      Boolean(item.dream_id) &&
+      ["comment", "reply", "reaction"].includes(item.notification_type);
+    const timestamp = Date.parse(item.created_at || "");
+    const key = canGroup
+      ? item.dream_id + "::" + item.notification_type
+      : "single::" + item.id;
+    const previous = canGroup ? recentGroups.get(key) : null;
+
+    if (
+      !previous ||
+      !Number.isFinite(timestamp) ||
+      !Number.isFinite(previous.latestTimestamp) ||
+      Math.abs(previous.latestTimestamp - timestamp) > groupingWindowMs
+    ) {
+      const group = {
+        items: [item],
+        latest: item,
+        latestTimestamp: timestamp
+      };
+      groups.push(group);
+      if (canGroup && Number.isFinite(timestamp)) {
+        recentGroups.set(key, group);
+      }
+      return;
+    }
+
+    previous.items.push(item);
+    if (timestamp > previous.latestTimestamp) {
+      previous.latest = item;
+      previous.latestTimestamp = timestamp;
+    }
+  });
+
+  return groups;
+}
+
+
 async function loadNotifications() {
 
 const list = document.getElementById("notificationsList");
@@ -3004,14 +3048,38 @@ commentMap[comment.id] = comment.content || "";
 
 list.innerHTML = "";
 
-visibleNotifications.forEach(item => {
-const actor = escapeHTML(profileMap[item.actor_id] || "A dreamer");
-const title = escapeHTML(dreamMap[item.dream_id] || "your dream");
+const activityGroups = groupNotificationsByActivity(visibleNotifications);
+
+activityGroups.forEach(group => {
+const item = group.latest;
+const groupItems = group.items;
+const groupCount = groupItems.length;
+const groupActorIds = [...new Set(groupItems.map(entry => entry.actor_id).filter(Boolean))];
+const groupActorNames = groupActorIds.map(id => profileMap[id] || "A dreamer");
+
+let actorLabel = "A dreamer";
+if (groupActorNames.length === 1) {
+actorLabel = groupActorNames[0];
+} else if (groupActorNames.length === 2) {
+actorLabel = groupActorNames[0] + " and " + groupActorNames[1];
+} else if (groupActorNames.length > 2) {
+actorLabel = groupActorNames[0] + ", " + groupActorNames[1] + " and " + (groupActorNames.length - 2) + " others";
+}
+
 let message = "interacted with";
 if (item.notification_type === "comment") message = "commented on";
 if (item.notification_type === "reply") message = "replied to your comment on";
 if (item.notification_type === "reaction") message = "reacted to";
 
+if (groupCount > 1 && groupActorIds.length === 1) {
+if (item.notification_type === "comment") message = "commented " + groupCount + " times on";
+if (item.notification_type === "reply") message = "sent " + groupCount + " replies on";
+if (item.notification_type === "reaction") message = "reacted " + groupCount + " times to";
+} else if (groupCount > 1 && item.notification_type === "reply") {
+message = "replied to your comments on";
+}
+
+const groupIsUnread = groupItems.some(entry => !entry.is_read);
 const needsCommentPreview =
 item.notification_type === "comment" ||
 item.notification_type === "reply";
@@ -3030,21 +3098,28 @@ const previewMarkup = needsCommentPreview
 ? `<p class="notification-preview">“${escapeHTML(previewText)}”</p>`
 : "";
 
+const groupCountMarkup = groupCount > 1
+? `<small class="meta notification-group-count">${groupCount} updates grouped from the last 24 hours</small>`
+: "";
+
 const row = document.createElement("div");
 row.className = "card";
 row.style.marginBottom = "12px";
 row.style.cursor = "pointer";
-row.style.borderLeft = item.is_read ? "3px solid #345170" : "3px solid #70b7ff";
+row.style.borderLeft = groupIsUnread ? "3px solid #70b7ff" : "3px solid #345170";
 row.innerHTML = `
   <p style="margin:0 0 8px;">
-    <strong>${actor}</strong> ${message} <strong>"${title}"</strong>
-    ${item.is_read ? "" : "<span class='meta'> • NEW</span>"}
+    <strong>${escapeHTML(actorLabel)}</strong> ${message} <strong>"${escapeHTML(dreamMap[item.dream_id] || "your dream")}"</strong>
+    ${groupIsUnread ? "<span class='meta'> • NEW</span>" : ""}
   </p>
+  ${groupCountMarkup}
   ${previewMarkup}
   <small class="meta">${new Date(item.created_at).toLocaleString()}</small>
 `;
+
 row.addEventListener("click", function() {
-openNotification(item.id, item.dream_id, item.comment_id);
+const groupedNotificationIds = groupItems.map(entry => entry.id).filter(Boolean);
+openNotification(groupedNotificationIds, item.dream_id, item.comment_id);
 });
 list.appendChild(row);
 });
@@ -3054,15 +3129,21 @@ await loadNotificationBadge();
 }
 
 
-async function openNotification(notificationId, dreamId, commentId) {
+async function openNotification(notificationIds, dreamId, commentId) {
 
 const { data: userData } = await supabaseClient.auth.getUser();
 if (!userData.user) return;
 
+const ids = Array.isArray(notificationIds)
+? [...new Set(notificationIds.filter(Boolean))]
+: [notificationIds].filter(Boolean);
+
+if (!ids.length) return;
+
 const { error } = await supabaseClient
 .from("notifications")
 .update({ is_read: true })
-.eq("id", notificationId)
+.in("id", ids)
 .eq("recipient_id", userData.user.id);
 
 if (error) {
@@ -3090,7 +3171,6 @@ target.style.outlineOffset = "";
 }
 
 }
-
 
 async function markAllNotificationsRead() {
 
