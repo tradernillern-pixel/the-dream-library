@@ -3063,7 +3063,8 @@ actorLabel = groupActorNames[0];
 } else if (groupActorNames.length === 2) {
 actorLabel = groupActorNames[0] + " and " + groupActorNames[1];
 } else if (groupActorNames.length > 2) {
-actorLabel = groupActorNames[0] + ", " + groupActorNames[1] + " and " + (groupActorNames.length - 2) + " others";
+const additionalActorCount = groupActorNames.length - 2;
+actorLabel = groupActorNames[0] + ", " + groupActorNames[1] + " and " + additionalActorCount + (additionalActorCount === 1 ? " other" : " others");
 }
 
 let message = "interacted with";
@@ -3073,7 +3074,7 @@ if (item.notification_type === "reaction") message = "reacted to";
 
 if (groupCount > 1 && groupActorIds.length === 1) {
 if (item.notification_type === "comment") message = "commented " + groupCount + " times on";
-if (item.notification_type === "reply") message = "sent " + groupCount + " replies on";
+if (item.notification_type === "reply") message = "sent " + groupCount + " replies to your comments on";
 if (item.notification_type === "reaction") message = "reacted " + groupCount + " times to";
 } else if (groupCount > 1 && item.notification_type === "reply") {
 message = "replied to your comments on";
@@ -3099,7 +3100,7 @@ const previewMarkup = needsCommentPreview
 : "";
 
 const groupCountMarkup = groupCount > 1
-? `<small class="meta notification-group-count">${groupCount} updates grouped from the last 24 hours</small>`
+? `<small class="meta notification-group-count">${groupCount} updates within a 24-hour period</small>`
 : "";
 
 const row = document.createElement("div");
