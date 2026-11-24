@@ -680,6 +680,12 @@ body:not(.dark-mode) .notification-preview {
 }
 
 
+.notification-group-count {
+  display: block;
+  margin: -2px 0 8px;
+  opacity: .8;
+}
+
 /* Notification list filters */
 .notification-filters {
   display: flex;
