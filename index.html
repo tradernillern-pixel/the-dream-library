@@ -2852,27 +2852,42 @@ notificationChannel = null;
    NOTIFICATIONS
    ================================================== */
 
+let notificationBadgeRequest = 0;
+let notificationLoadRequest = 0;
+
 async function loadNotificationBadge() {
 
+const requestId = ++notificationBadgeRequest;
 const badge = document.getElementById("notificationBadge");
 if (!badge) return;
 
 const { data: userData } = await supabaseClient.auth.getUser();
+if (requestId !== notificationBadgeRequest) return;
 if (!userData.user) {
+badge.textContent = "";
 badge.style.display = "none";
 return;
 }
 
+const userId = userData.user.id;
 const { count, error } = await supabaseClient
 .from("notifications")
 .select("id", { count: "exact", head: true })
-.eq("recipient_id", userData.user.id)
+.eq("recipient_id", userId)
 .eq("is_read", false);
 
+if (requestId !== notificationBadgeRequest) return;
 if (error) {
 console.warn("Notification badge error:", error);
 return;
 }
+
+const { data: latestUserData } = await supabaseClient.auth.getUser();
+if (
+requestId !== notificationBadgeRequest ||
+!latestUserData.user ||
+latestUserData.user.id !== userId
+) return;
 
 if (count > 0) {
 badge.textContent = count > 9 ? "9+" : String(count);
@@ -2958,11 +2973,13 @@ function groupNotificationsByActivity(notifications) {
 
 async function loadNotifications() {
 
+const requestId = ++notificationLoadRequest;
 const list = document.getElementById("notificationsList");
 const summary = document.getElementById("notificationSummary");
 if (!list) return;
 
 const { data: userData } = await supabaseClient.auth.getUser();
+if (requestId !== notificationLoadRequest) return;
 if (!userData.user) {
 syncNotificationFilters(0);
 list.innerHTML = "<p class='empty'>Please sign in to view your notifications.</p>";
@@ -2970,6 +2987,7 @@ summary.textContent = "Sign in to see your activity.";
 return;
 }
 
+const userId = userData.user.id;
 list.innerHTML = "<p class='empty'>Loading notifications...</p>";
 
 const { data: rows, error } = await supabaseClient
@@ -2979,11 +2997,19 @@ const { data: rows, error } = await supabaseClient
 .order("created_at", { ascending: false })
 .limit(50);
 
+if (requestId !== notificationLoadRequest) return;
 if (error) {
 console.error("Notifications loading error:", error);
 list.innerHTML = "<p class='empty'>Unable to load notifications. Please try again.</p>";
 return;
 }
+
+const { data: latestUserAfterRows } = await supabaseClient.auth.getUser();
+if (
+requestId !== notificationLoadRequest ||
+!latestUserAfterRows.user ||
+latestUserAfterRows.user.id !== userId
+) return;
 
 const notifications = rows || [];
 const unread = notifications.filter(item => !item.is_read).length;
@@ -3022,6 +3048,14 @@ commentIds.length
 ? supabaseClient.from("dream_comments").select("id,content").in("id", commentIds)
 : Promise.resolve({ data: [], error: null })
 ]);
+
+if (requestId !== notificationLoadRequest) return;
+const { data: latestUserAfterDetails } = await supabaseClient.auth.getUser();
+if (
+requestId !== notificationLoadRequest ||
+!latestUserAfterDetails.user ||
+latestUserAfterDetails.user.id !== userId
+) return;
 
 const profiles = profileResult.data || [];
 const dreams = dreamResult.data || [];
@@ -3334,6 +3368,25 @@ return;
 
 }
 
+notificationLoadRequest += 1;
+notificationBadgeRequest += 1;
+notificationFilter = "all";
+
+const notificationList = document.getElementById("notificationsList");
+const notificationSummary = document.getElementById("notificationSummary");
+const notificationBadge = document.getElementById("notificationBadge");
+
+if (notificationList) {
+notificationList.innerHTML = "<p class='empty'>Please sign in to view your notifications.</p>";
+}
+if (notificationSummary) {
+notificationSummary.textContent = "Sign in to see your activity.";
+}
+if (notificationBadge) {
+notificationBadge.textContent = "";
+notificationBadge.style.display = "none";
+}
+syncNotificationFilters(0);
 
 alert(
 "You have been signed out."
